@@ -339,8 +339,8 @@ ntpcal_get_build_date(
 	 * problem.
 	 *
 	 */
-#   ifdef MKREPRO_DATE
-	static const char build[] = MKREPRO_TIME "/" MKREPRO_DATE;
+#   if defined(BUILD_DATE)
+	static const char build[] = BUILD_DATE;
 #   else
 	static const char build[] = __TIME__ "/" __DATE__;
 #   endif
