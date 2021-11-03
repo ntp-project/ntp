@@ -1019,6 +1019,8 @@ mx4200_parse_t(
 		tp->tm_mon = month - 1;
 		tp->tm_mday = day_of_month;
 		ts = timegm(tp);
+		if (ts < 0)
+			break;
 
 		/* Add 1024 weeks */
 		ts += 1024 * 7 * 24 * 60 * 60;
