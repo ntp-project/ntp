@@ -97,7 +97,7 @@ struct ppsclockev {
 /*
  * Check this every time you edit the code!
  */
-#define YEAR_LAST_MODIFIED 2000
+#define YEAR_LAST_MODIFIED 2021
 
 /*
  * GPS Definitions
@@ -955,6 +955,8 @@ mx4200_parse_t(
 	int    year, day_of_year, month, day_of_month;
 	int    hour, minute, second, leapsec_warn;
 	int    oscillator_offset, time_mark_error, time_bias;
+	struct tm tm, *tp;
+	time_t ts;
 
 	pp = peer->procptr;
 	up = pp->unitptr;
@@ -1009,12 +1011,33 @@ mx4200_parse_t(
 		    hour, minute, second);
 	}
 
+	/* 10-bit gweek workaround */
+	while (year < YEAR_LAST_MODIFIED) {
+		tp = &tm;
+		memset(tp, 0, sizeof(*tp));
+		tp->tm_year = year;
+		tp->tm_mon = month - 1;
+		tp->tm_mday = day_of_month;
+		ts = timegm(tp);
+
+		/* Add 1024 weeks */
+		ts += 1024 * 7 * 24 * 60 * 60;
+
+		*tp = *gmtime(&ts);
+		msyslog(LOG_DEBUG, "mx4200_parse_t: gweek workaround"
+		    " %4d-%02d-%02d -> %4d-%02d-%02d",
+		    year, month, day_of_month,
+		    tp->tm_year, tp->tm_mon, tp->tm_mday);
+		year = tp->tm_year;
+		month = tp->tm_mon + 1;
+		day_of_month = tp->tm_mday;
+	}
+
 	/*
 	 * Check for insane date
 	 * (Certainly can't be any year before this code was last altered!)
 	 */
-	if (day_of_month > 31 || month > 12 ||
-	    day_of_month <  1 || month <  1 || year < YEAR_LAST_MODIFIED) {
+	if (day_of_month > 31 || month > 12 || day_of_month < 1 || month < 1) {
 		mx4200_debug(peer,
 		    "mx4200_parse_t: bad date (%4d-%02d-%02d)\n",
 		    year, month, day_of_month);
