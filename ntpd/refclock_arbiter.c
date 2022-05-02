@@ -355,6 +355,9 @@ arb_receive(
 		return;
 	}
 
+	if (pp->year < 20)		/* GPS week rollover? */
+	    pp->day += (1024*7);
+
 	/*
 	 * We decode the clock dispersion from the time quality
 	 * character.
