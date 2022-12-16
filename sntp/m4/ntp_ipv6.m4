@@ -116,7 +116,7 @@ AC_CACHE_CHECK(
 			# include <sys/socket.h>
 			#endif
 		    ]], [[
-			extern
+			extern int
 			getsockname(int, $getsockname_arg2, 
 				$ntp_cv_getsockname_socklen_type *);
 		    ]]

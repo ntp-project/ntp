@@ -400,7 +400,7 @@ case "$ac_cv_header_stdatomic_h" in
 		    [[
 			atomic_thread_fence(memory_order_seq_cst);
 		    ]]
-		)]
+		)],
 		[ntp_cv_func_atomic_thread_fence=yes],
 		[ntp_cv_func_atomic_thread_fence=no]
 	    )]
@@ -476,7 +476,7 @@ case "$have_adjtimex" in
 			struct nlist n;
 			n.n_un.n_name = 0;
 		    ]]
-		)]
+		)],
 		[ntp_cv_struct_nlist_n_un=yes],
 		[ntp_cv_struct_nlist_n_un=no]
 	    )]
@@ -1104,7 +1104,7 @@ AC_CACHE_CHECK(
 	    [[
 		extern int syscall (int, ...);
 	    ]]
-	)]
+	)],
 	[ntp_cv_decl_syscall=yes],
 	[ntp_cv_decl_syscall=no]
     )]
