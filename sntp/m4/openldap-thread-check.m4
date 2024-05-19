@@ -262,10 +262,8 @@ pthread_rwlock_t rwlock;
 				dnl save the flags
 				AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <pthread.h>
-#ifndef NULL
-#define NULL (void*)0
-#endif
-]], [[pthread_detach(NULL);]])],[ol_cv_func_pthread_detach=yes],[ol_cv_func_pthread_detach=no])
+pthread_t thread;
+]], [[pthread_detach(thread);]])],[ol_cv_func_pthread_detach=yes],[ol_cv_func_pthread_detach=no])
 			])
 
 			if test $ol_cv_func_pthread_detach = no ; then
