@@ -1,4 +1,9 @@
 ---
+
+* [Bug 3926] pthread_detach() not detected with gcc 14, clang 16.
+             Use pthread_t arg in openldap-thread-check.m4. <hart@ntp.org>
+
+---
 (4.2.8p18-RC1) 2024/05/07 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>
