@@ -1,4 +1,10 @@
 ---
+
+* [Bug 3924] Windows ntpd gives up on DNS too quickly at OS startup.
+             Increase max. DNS retry interval from 32 to 1024 seconds.
+             <hart@ntp.org>
+
+---
 (4.2.8p18-RC1) 2024/05/07 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>
@@ -87,7 +93,7 @@
 * Fix build on older FreeBSD lacking sys/procctl.h. <hart@ntp.org>
 * Disable [Bug 3627] workaround on newer FreeBSD which has the kernel fix
   that makes it unnecessary, re-enabling ASLR stack gap. <hart@ntp.org>
-* Use NONEMPTY_COMPILATION_UNIT in more conditionally-compiled files.
+* Use NONEMPTY_TRANSLATION_UNIT in more conditionally-compiled files.
 * Remove useless pointer to Windows Help from system error messages.
 * Avoid newlines within Windows error messages. <hart@ntp.org>
 * Ensure unique association IDs if wrapped. <hart@ntp.org>
