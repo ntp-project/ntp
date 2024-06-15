@@ -24,6 +24,11 @@
 #  define CMAC		"AES128CMAC"
 # endif /*HAVE_OPENSSL_CMAC_H*/
 
+/* Break apart OpenSSL version number */
+#define SSLV_MAJOR(vn)	(((vn) & 0xf0000000) >> 28)
+#define SSLV_MINOR(vn)	(((vn) & 0x0ff00000) >> 20)
+#define SSLV_PATCH(vn)	(((vn) & 0x00000ff0) >> 4)
+
 EVP_MD_CTX *digest_ctx;
 
 
@@ -62,16 +67,19 @@ ssl_init(void)
 void
 ssl_check_version(void)
 {
-	u_long	v;
-	char *  buf;
+	const u_long	bv = OPENSSL_VERSION_NUMBER;
+	u_long		rv = OpenSSL_version_num();
+	char *		buf;
 
-	v = OpenSSL_version_num();
-	if ((v ^ OPENSSL_VERSION_NUMBER) & ~0xff0L) {
-		LIB_GETBUF(buf);
-		snprintf(buf, LIB_BUFLENGTH, 
-			 "OpenSSL version mismatch."
-			 "Built against %lx, you have %lx\n",
-			 (u_long)OPENSSL_VERSION_NUMBER, v);
+	if (   SSLV_MAJOR(bv) != SSLV_MAJOR(rv)
+	    || SSLV_MINOR(bv) != SSLV_MINOR(rv)) {
+
+		buf = lib_getbuf();
+		snprintf(buf, LIB_BUFLENGTH,
+			"Using libcrypto %d.%d.%d,"
+			" built for %d.%d.%d.\n",
+			SSLV_MAJOR(rv), SSLV_MINOR(rv), SSLV_PATCH(rv),
+			SSLV_MAJOR(bv), SSLV_MINOR(bv), SSLV_PATCH(bv));
 		msyslog(LOG_WARNING, "%s", buf);
 		fputs(buf, stderr);
 	}

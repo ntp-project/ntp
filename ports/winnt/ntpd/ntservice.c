@@ -165,6 +165,11 @@ ntservice_init(void)
 		snprintf(ConsoleTitle, sizeof(ConsoleTitle),
 			 "NTP Version %s", Version);
 		SetConsoleTitle(ConsoleTitle);
+
+		if (!SetConsoleCtrlHandler(OnConsoleEvent, TRUE)) {
+			msyslog(LOG_ERR, "SetConsoleCtrlHandler: %m");
+			exit(1);
+		}
 	}
 
 #ifdef _CRTDBG_MAP_ALLOC
@@ -196,7 +201,6 @@ void
 ntservice_isup(void)
 {
 	if (!foreground) {
-		/* Register handler with the SCM */
 		if (!hServiceStatus) {
 			NTReportError(NTP_SERVICE_NAME,
 				"could not report to SCM");
@@ -207,12 +211,15 @@ ntservice_isup(void)
 }
 
 /*
- * Routine to check if the service is stopping
- * because the computer is shutting down
+ * Indicate if setting system time at termination is
+ * useful.
  */
 BOOL
-ntservice_systemisshuttingdown(void)
+shall_sync_cmos_time(void)
 {
+	if (LEAP_NOTINSYNC == sys_leap) {
+		return FALSE;
+	}
 	return computer_shutting_down;
 }
 
@@ -258,11 +265,8 @@ ServiceControl(
 		msyslog(LOG_INFO, "SCM requests stop (%s)",
 			msg_tab[!!computer_shutting_down]);
 		UpdateSCM(SERVICE_STOP_PENDING);
-		if (WaitableExitEventHandle != NULL) {
-			SetEvent(WaitableExitEventHandle);
-		} else {
-			exit(EX_SOFTWARE);
-		}
+		DEBUG_INSIST(NULL != WaitableExitEventHandle);
+		SetEvent(WaitableExitEventHandle);
 		break;
 
 	case SERVICE_CONTROL_PAUSE:
@@ -346,10 +350,8 @@ OnConsoleEvent(
 		case CTRL_C_EVENT:
 		case CTRL_CLOSE_EVENT:
 		case CTRL_SHUTDOWN_EVENT:
-			if (WaitableExitEventHandle != NULL) {
-				SetEvent(WaitableExitEventHandle);
-				Sleep(100);  //##++
-			}
+			SetEvent(WaitableExitEventHandle);
+			Sleep(100);  //##++
 			break;
 
 		default :

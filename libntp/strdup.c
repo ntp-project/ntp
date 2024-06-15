@@ -51,5 +51,5 @@ size_t strnlen(const char *s, size_t n)
 #endif
 
 #ifdef STRDUP_EMPTY_UNIT
-int strdup_c_nonempty_compilation_unit;
+NONEMPTY_TRANSLATION_UNIT
 #endif

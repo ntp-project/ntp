@@ -1,4 +1,10 @@
 ---
+
+* [Bug 3925] ntpd on Windows 8 and later doesn't set CMOS clock at shutdown.
+             <hart@ntp.org>
+* Display SSL shared library version number in human form. <hart@ntp.org>          
+
+---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>
