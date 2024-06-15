@@ -13,13 +13,32 @@ see notes/remarks directly below this header:
 # 
 #
 # Notes:  I had two goals with this script one to only use native
-#         NT Shell commands and two was too emulate the PERL style
+#         NT Shell commands and two was to emulate the PERL style
 #         output. This required some work for the DATE format as 
 #         you will see and TIME was really tricky to get a format 
 #         matching PERLs!
 #
 #
 # Changes:
+#
+# 06/03/2024	Dave Hart
+#				- Fix race condition with vs2015 project
+#				  files due to initial invocations not 
+#				  having "-P programname" argument combined
+#				  with use of %TEMP% directory with file
+#				  names differentiated by program name.
+#				- Allow reproducible builds and consistent
+#				  timestamps across tools by presetting
+#				  MYDATE and MYTIME environment variables.
+#				- Remove support for pre-WinNT 4 SP6a.
+#				- Do not use %TEMP% directory, this script
+#				  is invoked in per-target directories so
+#				  the current directory is safer against
+#				  collisions between simultaneous runs.
+#				- Replace remaining uses of find.exe with
+#				  findstr.exe and remove clever PATH 
+#				  manipulation to ensure Windows find.exe
+#				  is the first one found.
 #
 # 04/01/2023	Dave Hart
 #				- Use fast 'bk root' to check for BitKeeper
@@ -158,7 +177,6 @@ GOTO USAGE
 
 :BEGIN
 
-SET PATH=%COMSPEC:\cmd.exe=%;%PATH%
 SET GENERATED_PROGRAM=%2
 
 REM *****************************************************************************************************************
@@ -175,8 +193,6 @@ REM ****************************************************************************
 	SET VER=
 	SET CSET=
 	SET SSL=
-	SET MYDATE=
-	SET MYTIME=
 	SET DAY=99
 	SET NMM=99
 	SET YEAR=0
@@ -193,15 +209,14 @@ REM ****************************************************************************
 	SET ACTIVEBIAS=
 
 REM *****************************************************************************************************************
-REM Check if DATE and TIME environment variables are available
+REM Check if DATE and TIME environment variables are available.
+REM Allow reproducible builds by presetting MYDATE & MYTIME.
 REM *****************************************************************************************************************
 
-	SET MYDATE=%DATE%
-	SET MYTIME=%TIME%
-
-	REM ** Not available (huh? Are you older than NT4SP6A, grandpa?)
-	IF "%MYDATE%" == "" FOR /F "TOKENS=1 DELIMS=" %%a IN ('date/t') DO SET MYDATE=%%a
-	IF "%MYTIME%" == "" FOR /F "TOKENS=1 DELIMS=" %%a IN ('time/t') DO SET MYTIME=%%a
+	IF NOT "" == "%MYDATE%" echo Warning: mkver.bat : Using preset date for reproducible build: %MYDATE%
+	IF NOT "" == "%MYTIME%" echo Warning: mkver.bat : Using preset time for reproducible build: %MYTIME%
+	IF "" == "%MYDATE%" SET MYDATE=%DATE%
+	IF "" == "%MYTIME%" SET MYTIME=%TIME%
 
 REM *****************************************************************************************************************
 REM Try to find out UTC offset 
@@ -214,17 +229,16 @@ REM ****************************************************************************
 	SET UTC_SIGN=
 	
 	REM *** Now get the timezone settings from the registry
-	reg export "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" %TEMP%\TZ-%GENERATED_PROGRAM%.TMP >NUL
-	REM was: regedit /e %TEMP%\TZ-%GENERATED_PROGRAM%.TMP "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation"
-	IF NOT EXIST %TEMP%\TZ-%GENERATED_PROGRAM%.TMP GOTO NOTZINFO
+	reg export "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" tzinfo.reg >NUL
+	IF NOT EXIST tzinfo.reg GOTO NOTZINFO
 
-	for /f "Tokens=1* Delims==" %%a in ('type %TEMP%\TZ-%GENERATED_PROGRAM%.TMP') do if %%a == "ActiveTimeBias" SET ACTIVEBIAS=%%b
+	for /f "Tokens=1* Delims==" %%a in ('type tzinfo.reg') do if %%a == "ActiveTimeBias" SET ACTIVEBIAS=%%b
 	REM Windows 10 - Home and possibly others
-	IF "%ACTIVEBIAS%" == "" for /f "Tokens=1* Delims==" %%a in ('type %TEMP%\TZ-%GENERATED_PROGRAM%.TMP') do if %%a == "Bias" SET ACTIVEBIAS=%%b
+	IF "%ACTIVEBIAS%" == "" for /f "Tokens=1* Delims==" %%a in ('type tzinfo.reg') do if %%a == "Bias" SET ACTIVEBIAS=%%b
 	for /f "Tokens=1* Delims=:" %%a in ('echo %ACTIVEBIAS%') do ( SET ACTIVEBIAS=%%b & SET PARTYP=%%a )
 	
 	REM *** Clean up temporary file
-	IF EXIST %TEMP%\TZ-%GENERATED_PROGRAM%.TMP DEL %TEMP%\TZ-%GENERATED_PROGRAM%.TMP
+	IF EXIST tzinfo.reg DEL tzinfo.reg
 	
 	REM *** Check if we really got a dword value from the registry ...
 	IF NOT "%PARTYP%"=="dword " goto NOTZINFO
@@ -261,9 +275,7 @@ REM ****************************************************************************
 REM Now grab the Version number out of the source code (using the packageinfo.sh file...)
 REM *****************************************************************************************************************
 
-	REM First, get the main NTP version number. In recent versions this must be extracted 
-	REM from a packageinfo.sh file while in earlier versions the info was available from 
-	REM a version.m4 file.
+	REM First, get the NTP version number from packageinfo.sh file.
 	SET F_PACKAGEINFO_SH=..\..\..\..\packageinfo.sh
 	IF EXIST %F_PACKAGEINFO_SH% goto VER_FROM_PACKAGE_INFO
 	goto ERRNOVERF
@@ -271,7 +283,7 @@ REM ****************************************************************************
 :VER_FROM_PACKAGE_INFO
 	REM Get version from packageinfo.sh file, which contains lines reading e.g.
 	
-	TYPE %F_PACKAGEINFO_SH% | FIND /V "rcpoint=" | FIND /V "betapoint=" | FIND "point=" > point.txt
+	TYPE %F_PACKAGEINFO_SH% | findstr /V "rcpoint=" | findstr /V "betapoint=" | findstr "point=" > point.txt
 	SET F_POINT_SH=point.txt
 	
 	FOR /F "eol=# TOKENS=2 DELIMS==" %%a IN ('findstr  "proto=" %%F_PACKAGEINFO_SH%%') DO SET PROTO=%%a
@@ -354,17 +366,15 @@ REM Check for user settings regarding the time and date format, we use the regis
 REM *****************************************************************************************************************
 
 
-	REM Any temporary files left from a previous run? Go where you belong...
+	REM Any temporary files left from aborted previous run? Go where you belong...
 	IF exist userset.reg del userset.reg
 	IF exist userset.txt del userset.txt
 	
 	reg export "HKEY_CURRENT_USER\Control Panel\International" userset.reg >NUL
-	REM was: regedit /E userset.reg "HKEY_CURRENT_USER\Control Panel\International"
 	IF not exist userset.reg goto ERRNOREG
 
-	rem *** convert from unicode to ascii if necessary
+	rem *** convert from 16-bit unicode to 8-bit text
 	type userset.reg > userset.txt
-
 
 	FOR /F "TOKENS=1-9 DELIMS== " %%a IN ('findstr "iDate" userset.txt') DO SET DATEFORMAT=%%b
 	FOR /F "TOKENS=1-9 DELIMS== " %%a IN ('findstr "iTime" userset.txt') DO SET TIMEFORMAT=%%b
@@ -489,25 +499,25 @@ REM ****************************************************************************
 REM Here are the error messages I know
 REM *****************************************************************************************************************
 :ERRNOREG
-   ECHO "Error: Registry could not be read (check if reg.exe is available and works as expected)"
-   GOTO EOF
+    ECHO "Error: Registry could not be read (check if reg.exe is available and works as expected)"
+    GOTO EOF
 
 
 :ERRNODATE
-    ECHO "Error: Dateformat unknown (check if contents of userset.txt are correctly, especially for iDate and sDate)"
-	GOTO EOF
+    ECHO "Error: Date format unknown (check if contents of userset.txt are correct, especially for iDate and sDate)"
+    GOTO EOF
 
 :ERRNOTIME
-    ECHO "Error: Timeformat unknown (check if contents of userset.txt are correctly, especially for iTime and sTime)"
-	GOTO EOF
+    ECHO "Error: Time format unknown (check if contents of userset.txt are correct, especially for iTime and sTime)"
+    GOTO EOF
 
 :ERRNOVERF
     ECHO "Error: Version file not found (searching for ..\..\..\..\packageinfo.sh)"
-	GOTO EOF
+    GOTO EOF
 
 
 REM *****************************************************************************************************************
-REM Show'em how to run (me)
+REM Show 'em how to run (me)
 REM *****************************************************************************************************************
 :USAGE
 
@@ -523,7 +533,7 @@ REM All good things come to an end someday. Time to leave
 REM *****************************************************************************************************************
 :EOF
 
-REM *** Cleaning up 
+REM *** Cleaning up
 IF EXIST point.txt DEL point.txt
 IF EXIST userset.txt DEL userset.txt
 IF EXIST userset.reg DEL userset.reg
