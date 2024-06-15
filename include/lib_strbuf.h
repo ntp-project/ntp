@@ -22,7 +22,7 @@ extern	void	init_lib(void);
  * no need to churn the history with a mechanical switch away from
  * LIB_GETBUF(buf).
  */
-extern	char* lib_getbuf(void);
+extern	char * lib_getbuf(void);
 
 #define	LIB_GETBUF(bufp)		\
 	do {				\
