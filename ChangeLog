@@ -1,4 +1,9 @@
 ---
+
+* [Bug 3927] 4.2.8p18 configure reverses -L and -l in $LIBS for OpenSSL test.
+             Reported by Brian Utterback. <hart@ntp.org>
+
+---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>
