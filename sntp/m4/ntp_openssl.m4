@@ -291,20 +291,20 @@ case "$with_crypto" in
  *)
     ntp_ssl_libs_l="${ntp_ssl_libs_l:--lcrypto}"
     ntp_ssl_libs="$ntp_ssl_libs_L $ntp_ssl_libs_l"
+    dnl unconventional repeated AC_CHECK_FUNC, clear cached result.
+    AS_UNSET([ac_cv_func_EVP_MD_CTX_new])
     case "$ntp_ssl_libdir" in
      '')
 	dnl ### set ntp_ssl_libdir ###
 
-	dnl unconventional, using AC_CHECK_LIB repeatedly, clear cached result.
-	AS_UNSET([ac_cv_lib_crypto_EVP_MD_CTX_new])
 	AC_MSG_NOTICE([Searching for libcrypto without -L])
-	AC_CHECK_LIB(
-	    [crypto],
+	LIBS="-lcrypto $NTPSSL_SAVED_LIBS"
+	AC_CHECK_FUNC(
 	    [EVP_MD_CTX_new],
 	    [ntp_ssl_libdir='not needed']
 	)
-	dnl unconventional, using AC_CHECK_LIB repeatedly, clear cached result.
-	AS_UNSET([ac_cv_lib_crypto_EVP_MD_CTX_new])
+	dnl unconventional repeated AC_CHECK_FUNC, clear cached result.
+	AS_UNSET([ac_cv_func_EVP_MD_CTX_new])
     esac
     case "$ntp_ssl_libdir" in
      '')
@@ -326,20 +326,26 @@ case "$with_crypto" in
 	     not_found) ;;
 	     *)
 		AC_MSG_NOTICE([Searching for libcrypto in $i])
-		LIBS="-L$i $NTPSSL_SAVED_LIBS"
-		AC_CHECK_LIB(
-		    [crypto],
+		dnl https://bugs.ntp.org/3927
+		dnl Most compiler drivers sort all -L options before -l options
+		dnl when invoking the linker.  SunStudio apparently does not.
+		dnl AC_CHECK_LIB prefixes LIBS with its -l, which prevents us
+		dnl from preceding it with -L.  So we manipulate LIBS directly
+		dnl and use AC_CHECK_FUNC instead.
+		LIBS="-L$i -lcrypto $NTPSSL_SAVED_LIBS"
+		dnl unconventional repeated AC_CHECK_FUNC, clear cached result.
+		AS_UNSET([ac_cv_func_EVP_MD_CTX_new])
+		AC_CHECK_FUNC(
 		    [EVP_MD_CTX_new],
 		    [break]
 		)
-		dnl unconventional, using AC_CHECK_LIB repeatedly, clear cached result.
-		AS_UNSET([ac_cv_lib_crypto_EVP_MD_CTX_new])
 	    esac
 	done
+	dnl unconventional repeated AC_CHECK_FUNC, clear cached result.
+	AS_UNSET([ac_cv_func_EVP_MD_CTX_new])
 	ntp_ssl_libdir="$i"
 	ntp_ssl_libs_L="-L$i"
 	ntp_ssl_libs="$ntp_ssl_libs_L $ntp_ssl_libs_l"
-	LIBS="$NTPSSL_SAVED_LIBS"
 	case "$ntp_ssl_libdir" in
 	 not_found)
 	    AC_MSG_ERROR(
@@ -391,6 +397,7 @@ $ntp_ssl_libdir_search]
 	    do
 		AC_MSG_NOTICE([Searching for openssl/evp.h in $i])
 		CPPFLAGS="$NTPSSL_SAVED_CPPFLAGS -I$i"
+		LIBS="$ntp_ssl_libs $NTPSSL_SAVED_LIBS"
 		dnl force uncached AC_CHECK_HEADER
 		AS_UNSET([ac_cv_header_openssl_evp_h])
 		AC_CHECK_HEADER(
@@ -503,8 +510,9 @@ case "$ntp_openssl:$ntp_ssl_libdir" in
 	     $host:no)
 		AC_MSG_FAILURE(
 [Unable to run program using crypto, check openssl.pc
-or libcrypto.pc are in PKG_CONFIG_PATH, or provide the
- --with-openssl-libdir=/some/path option to configure.]
+or libcrypto.pc are in PKG_CONFIG_PATH, or provide
+--with-openssl-libdir=/some/path/lib and
+--with-openssl-incdir=/some/path/include options to configure.]
 		)
 	    esac
 	esac
@@ -675,7 +683,7 @@ case "$ntp_openssl" in
     dnl for us because we do not want to require OpenSSL 3 yet.
     dnl The deprecation warnings clutter up the build output
     dnl encouraging the habit of ignoring warnings.
-    dnl So, tell it to the hand, OpenSSL deprecation warnings...
+    dnl So for now, disable OpenSSL deprecation warnings.
     AC_DEFINE([OPENSSL_SUPPRESS_DEPRECATED], [1],
 	      [Suppress OpenSSL 3 deprecation warnings])
     dnl We don't want -Werror for the EVP_MD_do_all_sorted check
