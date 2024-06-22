@@ -201,8 +201,7 @@ static	dnsworker_ctx *	get_worker_context(blocking_child *, u_int);
 static	void		scheduled_sleep(time_t, time_t,
 					dnsworker_ctx *);
 static	void		manage_dns_retry_interval(time_t *, time_t *,
-						  int *, time_t *,
-						  int/*BOOL*/);
+						  int *, time_t *);
 static	int		should_retry_dns(int, int);
 #ifdef HAVE_RES_INIT
 static	void		reload_resolv_conf(dnsworker_ctx *);
@@ -244,12 +243,12 @@ getaddrinfo_sometime_ex(
 	size_t			servsize;
 	time_t			now;
 	
-	REQUIRE(NULL != node);
+	DEBUG_REQUIRE(NULL != node);
 	if (NULL != hints) {
-		REQUIRE(0 == hints->ai_addrlen);
-		REQUIRE(NULL == hints->ai_addr);
-		REQUIRE(NULL == hints->ai_canonname);
-		REQUIRE(NULL == hints->ai_next);
+		DEBUG_REQUIRE(0 == hints->ai_addrlen);
+		DEBUG_REQUIRE(NULL == hints->ai_addr);
+		DEBUG_REQUIRE(NULL == hints->ai_canonname);
+		DEBUG_REQUIRE(NULL == hints->ai_next);
 	}
 
 	idx = get_dnschild_ctx();
@@ -379,8 +378,8 @@ blocking_getaddrinfo(
 
 	/*
 	 * Our response consists of a header, followed by ai_count 
-	 * addrinfo structs followed by ai_count sockaddr_storage 
-	 * structs followed by the canonical names.
+	 * addrinfo structs followed by ai_count sockaddr_u structs
+	 * followed by the canonical names.
 	 */
 	gai_resp->octets = sizeof(*gai_resp)
 			    + gai_resp->ai_count
@@ -482,7 +481,7 @@ getaddrinfo_sometime_complete(
 	char *			service;
 	char *			canon_start;
 	time_t			time_now;
-	int			again, noerr;
+	int			again;
 	int			af;
 	const char *		fam_spec;
 	int			i;
@@ -510,22 +509,19 @@ getaddrinfo_sometime_complete(
 				  gai_req->dns_idx, humantime(time_now)));
 		}
 	} else {
-		noerr = !!(gai_req->qflags & GAIR_F_IGNDNSERR);
-		again = noerr || should_retry_dns(
-					gai_resp->retcode, gai_resp->gai_errno);
-		/*
-		 * exponential backoff of DNS retries to 64s
-		 */
+		again =    !!(gai_req->qflags & GAIR_F_IGNDNSERR)
+			|| should_retry_dns(gai_resp->retcode,
+					    gai_resp->gai_errno);
 		if (gai_req->retry > 0 && again) {
 			/* log the first retry only */
-			if (INITIAL_DNS_RETRY == gai_req->retry)
+			if (INITIAL_DNS_RETRY == gai_req->retry) {
 				NLOG(NLOG_SYSINFO) {
 					af = gai_req->hints.ai_family;
 					fam_spec = (AF_INET6 == af)
-						       ? " (AAAA)"
-						       : (AF_INET == af)
-							     ? " (A)"
-							     : "";
+						? " (AAAA)"
+						: (AF_INET == af)
+						? " (A)"
+						: "";
 #ifdef EAI_SYSTEM
 					if (EAI_SYSTEM == gai_resp->retcode) {
 						errno = gai_resp->gai_errno;
@@ -535,27 +531,29 @@ getaddrinfo_sometime_complete(
 							gai_resp->gai_errno);
 					} else
 #endif
+					{
 						msyslog(LOG_INFO,
 							"retrying DNS %s%s: %s (%d)",
 							node, fam_spec,
 							gai_strerror(gai_resp->retcode),
 							gai_resp->retcode);
+					}
 				}
+			}
 			manage_dns_retry_interval(
 				&gai_req->scheduled, &gai_req->earliest,
-				&gai_req->retry, &child_ctx->next_dns_timeslot,
-				noerr);
+				&gai_req->retry, &child_ctx->next_dns_timeslot);
 			if (!queue_blocking_request(
 					BLOCKING_GETADDRINFO,
 					gai_req,
 					gai_req->octets,
 					&getaddrinfo_sometime_complete,
-					gai_req))
+					gai_req)) {
 				return;
-			else
+			} else {
 				msyslog(LOG_ERR,
-					"unable to retry hostname %s",
-					node);
+					"unable to retry hostname %s", node);
+			}
 		}
 	}
 
@@ -839,8 +837,8 @@ getnameinfo_sometime_complete(
 		 */
 		if (gni_req->retry > 0)
 			manage_dns_retry_interval(&gni_req->scheduled,
-			    &gni_req->earliest, &gni_req->retry,
-						  &child_ctx->next_dns_timeslot, FALSE);
+				&gni_req->earliest, &gni_req->retry,
+				&child_ctx->next_dns_timeslot);
 
 		if (gni_req->retry > 0 && again) {
 			if (!queue_blocking_request(
@@ -1047,32 +1045,24 @@ manage_dns_retry_interval(
 	time_t *	pscheduled,
 	time_t *	pwhen,
 	int *		pretry,
-	time_t *	pnext_timeslot,
-	int		forever
+	time_t *	pnext_timeslot
 	)
 {
 	time_t	now;
 	time_t	when;
 	int	retry;
-	int	retmax;
 		
 	now = time(NULL);
 	retry = *pretry;
 	when = max(now + retry, *pnext_timeslot);
 	*pnext_timeslot = when;
 
-	/* this exponential backoff is slower than doubling up: The
-	 * sequence goes 2-3-4-6-8-12-16-24-32... and the upper limit is
-	 * 64 seconds for things that should not repeat forever, and
-	 * 1024 when repeated forever.
+	/*
+	 * Increase retry slowly. The sequence is:
+	 * 1-2-3-4-5-6-7-8-10-12-15-18-22-27-33...1024.
 	 */
-	retmax = forever ? 1024 : 64;
-	retry <<= 1;
-	if (retry & (retry - 1))
-		retry &= (retry - 1);
-	else
-		retry -= (retry >> 2);
-	retry = min(retmax, retry);
+	retry = (retry * 5) / 4;
+	retry = min3(retry, *pretry + 1, 1024);
 
 	*pscheduled = now;
 	*pwhen = when;
@@ -1084,7 +1074,7 @@ manage_dns_retry_interval(
  * and getnameinfo_sometime_complete which implements ntpd's DNS retry
  * policy.
  */
-static int
+static int/*BOOL*/
 should_retry_dns(
 	int	rescode,
 	int	res_errno
@@ -1113,9 +1103,33 @@ should_retry_dns(
 		eai_again_seen = 1;		/* [Bug 1178] */
 		break;
 
-	case EAI_NONAME:
-#if defined(EAI_NODATA) && (EAI_NODATA != EAI_NONAME)
+	/*
+	 * Windows 10 returns a permanent failure (WSANO_DATA) when there
+	 * is an A or AAAA record available but no local address is up yet
+	 * which might be able to communicate with the requested address.
+	 * This is the documented behavior for Windows Vista and later when
+	 * AI_ADDRCONFIG is used, but happens on Windows 10 even without
+	 * AI_ADDRCONFIG.  This can cause ntpd to give up on resolving
+	 * hostnames before a local address comes up during OS boot due
+	 * to devices not yet up or DHCP not having yet completed.  To
+	 * avoid this, always retry queries on Windows until the system
+	 * has been up for 10 minutes.  GetTickCount() returns the number
+	 * of milliseconds since boot, wrapping after 49.7 days.
+	 */
+#if defined(SYS_WINNT) &&  (EAI_NODATA == EAI_NONAME)
+#undef EAI_NODATA	 /* encrusted WS2tcpip.h idiocy */
+#define EAI_NODATA WSANO_DATA
+#endif
+
+#ifdef EAI_NODATA
 	case EAI_NODATA:
+#endif
+	case EAI_NONAME:
+#ifdef SYS_WINNT
+		if (GetTickCount() < 10 * SECSPERMIN * 1000) {
+			again = 1;	/* https://bugs.ntp.org/3924 */
+			break;
+		}
 #endif
 		again = !eai_again_seen;	/* [Bug 1178] */
 		break;
@@ -1144,5 +1158,5 @@ should_retry_dns(
 }
 
 #else	/* !WORKER follows */
-int ntp_intres_nonempty_compilation_unit;
+NONEMPTY_TRANSLATION_UNIT
 #endif
