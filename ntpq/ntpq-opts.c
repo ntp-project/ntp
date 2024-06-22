@@ -1,7 +1,7 @@
 /*
  *  EDIT THIS FILE WITH CAUTION  (ntpq-opts.c)
  *
- *  It has been AutoGen-ed  May  7, 2024 at 05:30:37 AM by AutoGen 5.18.16
+ *  It has been AutoGen-ed  May 25, 2024 at 12:04:21 AM by AutoGen 5.18.16
  *  From the definitions    ntpq-opts.def
  *  and the template file   options
  *
@@ -55,7 +55,7 @@ extern "C" {
 #endif
 extern FILE * option_usage_fp;
 #define zCopyright      (ntpq_opt_strs+0)
-#define zLicenseDescrip (ntpq_opt_strs+345)
+#define zLicenseDescrip (ntpq_opt_strs+341)
 
 /*
  *  global included definitions
@@ -73,15 +73,15 @@ extern FILE * option_usage_fp;
 /**
  *  static const strings for ntpq options
  */
-static char const ntpq_opt_strs[2080] =
-/*     0 */ "ntpq 4.2.8p18-RC1\n"
+static char const ntpq_opt_strs[2068] =
+/*     0 */ "ntpq 4.2.8p18\n"
             "Copyright (C) 1992-2024 The University of Delaware and Network Time Foundation, all rights reserved.\n"
             "This is free software. It is licensed for use, modification and\n"
             "redistribution under the terms of the NTP License, copies of which\n"
             "can be seen at:\n"
             "  <http://ntp.org/license>\n"
             "  <http://opensource.org/licenses/ntp-license.php>\n\0"
-/*   345 */ "Permission to use, copy, modify, and distribute this software and its\n"
+/*   341 */ "Permission to use, copy, modify, and distribute this software and its\n"
             "documentation for any purpose with or without fee is hereby granted,\n"
             "provided that the above copyright notice appears in all copies and that\n"
             "both the copyright notice and this permission notice appear in supporting\n"
@@ -91,74 +91,74 @@ static char const ntpq_opt_strs[2080] =
             "Time Foundation makes no representations about the suitability this\n"
             "software for any purpose.  It is provided \"as is\" without express or\n"
             "implied warranty.\n\0"
-/*  1013 */ "Force IPv4 name resolution\0"
-/*  1040 */ "IPV4\0"
-/*  1045 */ "ipv4\0"
-/*  1050 */ "Force IPv6 name resolution\0"
-/*  1077 */ "IPV6\0"
-/*  1082 */ "ipv6\0"
-/*  1087 */ "run a command and exit\0"
-/*  1110 */ "COMMAND\0"
-/*  1118 */ "command\0"
-/*  1126 */ "Increase debug verbosity level\0"
-/*  1157 */ "DEBUG_LEVEL\0"
-/*  1169 */ "debug-level\0"
-/*  1181 */ "Set the debug verbosity level\0"
-/*  1211 */ "SET_DEBUG_LEVEL\0"
-/*  1227 */ "set-debug-level\0"
-/*  1243 */ "Force ntpq to operate in interactive mode\0"
-/*  1285 */ "INTERACTIVE\0"
-/*  1297 */ "interactive\0"
-/*  1309 */ "numeric host addresses\0"
-/*  1332 */ "NUMERIC\0"
-/*  1340 */ "numeric\0"
-/*  1348 */ "Always output status line with readvar\0"
-/*  1387 */ "OLD_RV\0"
-/*  1394 */ "old-rv\0"
-/*  1401 */ "Print a list of the peers\0"
-/*  1427 */ "PEERS\0"
-/*  1433 */ "peers\0"
-/*  1439 */ "Set default display type for S2+ refids\0"
-/*  1479 */ "REFID\0"
-/*  1485 */ "refid\0"
-/*  1491 */ "Use unconnected UDP to communicate with ntpd (default on Windows)\0"
-/*  1557 */ "UNCONNECTED\0"
-/*  1569 */ "unconnected\0"
-/*  1581 */ "Display the full 'remote' value\0"
-/*  1613 */ "WIDE\0"
-/*  1618 */ "wide\0"
-/*  1623 */ "display extended usage information and exit\0"
-/*  1667 */ "help\0"
-/*  1672 */ "extended usage information passed thru pager\0"
-/*  1717 */ "more-help\0"
-/*  1727 */ "output version information and exit\0"
-/*  1763 */ "version\0"
-/*  1771 */ "save the option state to a config file\0"
-/*  1810 */ "save-opts\0"
-/*  1820 */ "load options from a config file\0"
-/*  1852 */ "LOAD_OPTS\0"
-/*  1862 */ "no-load-opts\0"
-/*  1875 */ "no\0"
-/*  1878 */ "NTPQ\0"
-/*  1883 */ "ntpq - standard NTP query program - Ver. 4.2.8p18-RC1\n"
+/*  1009 */ "Force IPv4 name resolution\0"
+/*  1036 */ "IPV4\0"
+/*  1041 */ "ipv4\0"
+/*  1046 */ "Force IPv6 name resolution\0"
+/*  1073 */ "IPV6\0"
+/*  1078 */ "ipv6\0"
+/*  1083 */ "run a command and exit\0"
+/*  1106 */ "COMMAND\0"
+/*  1114 */ "command\0"
+/*  1122 */ "Increase debug verbosity level\0"
+/*  1153 */ "DEBUG_LEVEL\0"
+/*  1165 */ "debug-level\0"
+/*  1177 */ "Set the debug verbosity level\0"
+/*  1207 */ "SET_DEBUG_LEVEL\0"
+/*  1223 */ "set-debug-level\0"
+/*  1239 */ "Force ntpq to operate in interactive mode\0"
+/*  1281 */ "INTERACTIVE\0"
+/*  1293 */ "interactive\0"
+/*  1305 */ "numeric host addresses\0"
+/*  1328 */ "NUMERIC\0"
+/*  1336 */ "numeric\0"
+/*  1344 */ "Always output status line with readvar\0"
+/*  1383 */ "OLD_RV\0"
+/*  1390 */ "old-rv\0"
+/*  1397 */ "Print a list of the peers\0"
+/*  1423 */ "PEERS\0"
+/*  1429 */ "peers\0"
+/*  1435 */ "Set default display type for S2+ refids\0"
+/*  1475 */ "REFID\0"
+/*  1481 */ "refid\0"
+/*  1487 */ "Use unconnected UDP to communicate with ntpd (default on Windows)\0"
+/*  1553 */ "UNCONNECTED\0"
+/*  1565 */ "unconnected\0"
+/*  1577 */ "Display the full 'remote' value\0"
+/*  1609 */ "WIDE\0"
+/*  1614 */ "wide\0"
+/*  1619 */ "display extended usage information and exit\0"
+/*  1663 */ "help\0"
+/*  1668 */ "extended usage information passed thru pager\0"
+/*  1713 */ "more-help\0"
+/*  1723 */ "output version information and exit\0"
+/*  1759 */ "version\0"
+/*  1767 */ "save the option state to a config file\0"
+/*  1806 */ "save-opts\0"
+/*  1816 */ "load options from a config file\0"
+/*  1848 */ "LOAD_OPTS\0"
+/*  1858 */ "no-load-opts\0"
+/*  1871 */ "no\0"
+/*  1874 */ "NTPQ\0"
+/*  1879 */ "ntpq - standard NTP query program - Ver. 4.2.8p18\n"
             "Usage:  %s [ -<flag> [<val>] | --<name>[{=| }<val>] ]... [ host ...]\n\0"
-/*  2007 */ "$HOME\0"
-/*  2013 */ ".\0"
-/*  2015 */ ".ntprc\0"
-/*  2022 */ "https://bugs.ntp.org, bugs@ntp.org\0"
-/*  2057 */ "ntpq 4.2.8p18-RC1\0"
-/*  2075 */ "hash";
+/*  1999 */ "$HOME\0"
+/*  2005 */ ".\0"
+/*  2007 */ ".ntprc\0"
+/*  2014 */ "https://bugs.ntp.org, bugs@ntp.org\0"
+/*  2049 */ "ntpq 4.2.8p18\0"
+/*  2063 */ "hash";
 
 /**
  *  ipv4 option description with
  *  "Must also have options" and "Incompatible options":
  */
 /** Descriptive text for the ipv4 option */
-#define IPV4_DESC      (ntpq_opt_strs+1013)
+#define IPV4_DESC      (ntpq_opt_strs+1009)
 /** Upper-cased name for the ipv4 option */
-#define IPV4_NAME      (ntpq_opt_strs+1040)
+#define IPV4_NAME      (ntpq_opt_strs+1036)
 /** Name string for the ipv4 option */
-#define IPV4_name      (ntpq_opt_strs+1045)
+#define IPV4_name      (ntpq_opt_strs+1041)
 /** Other options that appear in conjunction with the ipv4 option */
 static int const aIpv4CantList[] = {
     INDEX_OPT_IPV6, NO_EQUIVALENT };
@@ -170,11 +170,11 @@ static int const aIpv4CantList[] = {
  *  "Must also have options" and "Incompatible options":
  */
 /** Descriptive text for the ipv6 option */
-#define IPV6_DESC      (ntpq_opt_strs+1050)
+#define IPV6_DESC      (ntpq_opt_strs+1046)
 /** Upper-cased name for the ipv6 option */
-#define IPV6_NAME      (ntpq_opt_strs+1077)
+#define IPV6_NAME      (ntpq_opt_strs+1073)
 /** Name string for the ipv6 option */
-#define IPV6_name      (ntpq_opt_strs+1082)
+#define IPV6_name      (ntpq_opt_strs+1078)
 /** Other options that appear in conjunction with the ipv6 option */
 static int const aIpv6CantList[] = {
     INDEX_OPT_IPV4, NO_EQUIVALENT };
@@ -185,11 +185,11 @@ static int const aIpv6CantList[] = {
  *  command option description:
  */
 /** Descriptive text for the command option */
-#define COMMAND_DESC      (ntpq_opt_strs+1087)
+#define COMMAND_DESC      (ntpq_opt_strs+1083)
 /** Upper-cased name for the command option */
-#define COMMAND_NAME      (ntpq_opt_strs+1110)
+#define COMMAND_NAME      (ntpq_opt_strs+1106)
 /** Name string for the command option */
-#define COMMAND_name      (ntpq_opt_strs+1118)
+#define COMMAND_name      (ntpq_opt_strs+1114)
 /** Compiled in flag settings for the command option */
 #define COMMAND_FLAGS     (OPTST_DISABLED \
         | OPTST_SET_ARGTYPE(OPARG_TYPE_STRING))
@@ -198,11 +198,11 @@ static int const aIpv6CantList[] = {
  *  debug-level option description:
  */
 /** Descriptive text for the debug-level option */
-#define DEBUG_LEVEL_DESC      (ntpq_opt_strs+1126)
+#define DEBUG_LEVEL_DESC      (ntpq_opt_strs+1122)
 /** Upper-cased name for the debug-level option */
-#define DEBUG_LEVEL_NAME      (ntpq_opt_strs+1157)
+#define DEBUG_LEVEL_NAME      (ntpq_opt_strs+1153)
 /** Name string for the debug-level option */
-#define DEBUG_LEVEL_name      (ntpq_opt_strs+1169)
+#define DEBUG_LEVEL_name      (ntpq_opt_strs+1165)
 /** Compiled in flag settings for the debug-level option */
 #define DEBUG_LEVEL_FLAGS     (OPTST_DISABLED)
 
@@ -210,11 +210,11 @@ static int const aIpv6CantList[] = {
  *  set-debug-level option description:
  */
 /** Descriptive text for the set-debug-level option */
-#define SET_DEBUG_LEVEL_DESC      (ntpq_opt_strs+1181)
+#define SET_DEBUG_LEVEL_DESC      (ntpq_opt_strs+1177)
 /** Upper-cased name for the set-debug-level option */
-#define SET_DEBUG_LEVEL_NAME      (ntpq_opt_strs+1211)
+#define SET_DEBUG_LEVEL_NAME      (ntpq_opt_strs+1207)
 /** Name string for the set-debug-level option */
-#define SET_DEBUG_LEVEL_name      (ntpq_opt_strs+1227)
+#define SET_DEBUG_LEVEL_name      (ntpq_opt_strs+1223)
 /** Compiled in flag settings for the set-debug-level option */
 #define SET_DEBUG_LEVEL_FLAGS     (OPTST_DISABLED \
         | OPTST_SET_ARGTYPE(OPARG_TYPE_NUMERIC))
@@ -224,11 +224,11 @@ static int const aIpv6CantList[] = {
  *  "Must also have options" and "Incompatible options":
  */
 /** Descriptive text for the interactive option */
-#define INTERACTIVE_DESC      (ntpq_opt_strs+1243)
+#define INTERACTIVE_DESC      (ntpq_opt_strs+1239)
 /** Upper-cased name for the interactive option */
-#define INTERACTIVE_NAME      (ntpq_opt_strs+1285)
+#define INTERACTIVE_NAME      (ntpq_opt_strs+1281)
 /** Name string for the interactive option */
-#define INTERACTIVE_name      (ntpq_opt_strs+1297)
+#define INTERACTIVE_name      (ntpq_opt_strs+1293)
 /** Other options that appear in conjunction with the interactive option */
 static int const aInteractiveCantList[] = {
     INDEX_OPT_COMMAND,
@@ -240,11 +240,11 @@ static int const aInteractiveCantList[] = {
  *  numeric option description:
  */
 /** Descriptive text for the numeric option */
-#define NUMERIC_DESC      (ntpq_opt_strs+1309)
+#define NUMERIC_DESC      (ntpq_opt_strs+1305)
 /** Upper-cased name for the numeric option */
-#define NUMERIC_NAME      (ntpq_opt_strs+1332)
+#define NUMERIC_NAME      (ntpq_opt_strs+1328)
 /** Name string for the numeric option */
-#define NUMERIC_name      (ntpq_opt_strs+1340)
+#define NUMERIC_name      (ntpq_opt_strs+1336)
 /** Compiled in flag settings for the numeric option */
 #define NUMERIC_FLAGS     (OPTST_DISABLED)
 
@@ -252,11 +252,11 @@ static int const aInteractiveCantList[] = {
  *  old-rv option description:
  */
 /** Descriptive text for the old-rv option */
-#define OLD_RV_DESC      (ntpq_opt_strs+1348)
+#define OLD_RV_DESC      (ntpq_opt_strs+1344)
 /** Upper-cased name for the old-rv option */
-#define OLD_RV_NAME      (ntpq_opt_strs+1387)
+#define OLD_RV_NAME      (ntpq_opt_strs+1383)
 /** Name string for the old-rv option */
-#define OLD_RV_name      (ntpq_opt_strs+1394)
+#define OLD_RV_name      (ntpq_opt_strs+1390)
 /** Compiled in flag settings for the old-rv option */
 #define OLD_RV_FLAGS     (OPTST_DISABLED)
 
@@ -265,11 +265,11 @@ static int const aInteractiveCantList[] = {
  *  "Must also have options" and "Incompatible options":
  */
 /** Descriptive text for the peers option */
-#define PEERS_DESC      (ntpq_opt_strs+1401)
+#define PEERS_DESC      (ntpq_opt_strs+1397)
 /** Upper-cased name for the peers option */
-#define PEERS_NAME      (ntpq_opt_strs+1427)
+#define PEERS_NAME      (ntpq_opt_strs+1423)
 /** Name string for the peers option */
-#define PEERS_name      (ntpq_opt_strs+1433)
+#define PEERS_name      (ntpq_opt_strs+1429)
 /** Other options that appear in conjunction with the peers option */
 static int const aPeersCantList[] = {
     INDEX_OPT_INTERACTIVE, NO_EQUIVALENT };
@@ -280,11 +280,11 @@ static int const aPeersCantList[] = {
  *  refid option description:
  */
 /** Descriptive text for the refid option */
-#define REFID_DESC      (ntpq_opt_strs+1439)
+#define REFID_DESC      (ntpq_opt_strs+1435)
 /** Upper-cased name for the refid option */
-#define REFID_NAME      (ntpq_opt_strs+1479)
+#define REFID_NAME      (ntpq_opt_strs+1475)
 /** Name string for the refid option */
-#define REFID_name      (ntpq_opt_strs+1485)
+#define REFID_name      (ntpq_opt_strs+1481)
 /** The compiled in default value for the refid option argument */
 #define REFID_DFT_ARG   ((char const*)REFID_IPV4)
 /** Compiled in flag settings for the refid option */
@@ -295,11 +295,11 @@ static int const aPeersCantList[] = {
  *  unconnected option description:
  */
 /** Descriptive text for the unconnected option */
-#define UNCONNECTED_DESC      (ntpq_opt_strs+1491)
+#define UNCONNECTED_DESC      (ntpq_opt_strs+1487)
 /** Upper-cased name for the unconnected option */
-#define UNCONNECTED_NAME      (ntpq_opt_strs+1557)
+#define UNCONNECTED_NAME      (ntpq_opt_strs+1553)
 /** Name string for the unconnected option */
-#define UNCONNECTED_name      (ntpq_opt_strs+1569)
+#define UNCONNECTED_name      (ntpq_opt_strs+1565)
 /** Compiled in flag settings for the unconnected option */
 #define UNCONNECTED_FLAGS     (OPTST_DISABLED)
 
@@ -307,22 +307,22 @@ static int const aPeersCantList[] = {
  *  wide option description:
  */
 /** Descriptive text for the wide option */
-#define WIDE_DESC      (ntpq_opt_strs+1581)
+#define WIDE_DESC      (ntpq_opt_strs+1577)
 /** Upper-cased name for the wide option */
-#define WIDE_NAME      (ntpq_opt_strs+1613)
+#define WIDE_NAME      (ntpq_opt_strs+1609)
 /** Name string for the wide option */
-#define WIDE_name      (ntpq_opt_strs+1618)
+#define WIDE_name      (ntpq_opt_strs+1614)
 /** Compiled in flag settings for the wide option */
 #define WIDE_FLAGS     (OPTST_DISABLED)
 
 /*
  *  Help/More_Help/Version option descriptions:
  */
-#define HELP_DESC       (ntpq_opt_strs+1623)
-#define HELP_name       (ntpq_opt_strs+1667)
+#define HELP_DESC       (ntpq_opt_strs+1619)
+#define HELP_name       (ntpq_opt_strs+1663)
 #ifdef HAVE_WORKING_FORK
-#define MORE_HELP_DESC  (ntpq_opt_strs+1672)
-#define MORE_HELP_name  (ntpq_opt_strs+1717)
+#define MORE_HELP_DESC  (ntpq_opt_strs+1668)
+#define MORE_HELP_name  (ntpq_opt_strs+1713)
 #define MORE_HELP_FLAGS (OPTST_IMM | OPTST_NO_INIT)
 #else
 #define MORE_HELP_DESC  HELP_DESC
@@ -335,14 +335,14 @@ static int const aPeersCantList[] = {
 #  define VER_FLAGS     (OPTST_SET_ARGTYPE(OPARG_TYPE_STRING) | \
                          OPTST_ARG_OPTIONAL | OPTST_IMM | OPTST_NO_INIT)
 #endif
-#define VER_DESC        (ntpq_opt_strs+1727)
-#define VER_name        (ntpq_opt_strs+1763)
-#define SAVE_OPTS_DESC  (ntpq_opt_strs+1771)
-#define SAVE_OPTS_name  (ntpq_opt_strs+1810)
-#define LOAD_OPTS_DESC     (ntpq_opt_strs+1820)
-#define LOAD_OPTS_NAME     (ntpq_opt_strs+1852)
-#define NO_LOAD_OPTS_name  (ntpq_opt_strs+1862)
-#define LOAD_OPTS_pfx      (ntpq_opt_strs+1875)
+#define VER_DESC        (ntpq_opt_strs+1723)
+#define VER_name        (ntpq_opt_strs+1759)
+#define SAVE_OPTS_DESC  (ntpq_opt_strs+1767)
+#define SAVE_OPTS_name  (ntpq_opt_strs+1806)
+#define LOAD_OPTS_DESC     (ntpq_opt_strs+1816)
+#define LOAD_OPTS_NAME     (ntpq_opt_strs+1848)
+#define NO_LOAD_OPTS_name  (ntpq_opt_strs+1858)
+#define LOAD_OPTS_pfx      (ntpq_opt_strs+1871)
 #define LOAD_OPTS_name     (NO_LOAD_OPTS_name + 3)
 /**
  *  Declare option callback procedures
@@ -575,24 +575,24 @@ static tOptDesc optDesc[OPTION_CT] = {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /** Reference to the upper cased version of ntpq. */
-#define zPROGNAME       (ntpq_opt_strs+1878)
+#define zPROGNAME       (ntpq_opt_strs+1874)
 /** Reference to the title line for ntpq usage. */
-#define zUsageTitle     (ntpq_opt_strs+1883)
+#define zUsageTitle     (ntpq_opt_strs+1879)
 /** ntpq configuration file name. */
-#define zRcName         (ntpq_opt_strs+2015)
+#define zRcName         (ntpq_opt_strs+2007)
 /** Directories to search for ntpq config files. */
 static char const * const apzHomeList[3] = {
-    ntpq_opt_strs+2007,
-    ntpq_opt_strs+2013,
+    ntpq_opt_strs+1999,
+    ntpq_opt_strs+2005,
     NULL };
 /** The ntpq program bug email address. */
-#define zBugsAddr       (ntpq_opt_strs+2022)
+#define zBugsAddr       (ntpq_opt_strs+2014)
 /** Clarification/explanation of what ntpq does. */
 #define zExplain        (NULL)
 /** Extra detail explaining what ntpq does. */
 #define zDetail         (NULL)
 /** The full version string for ntpq. */
-#define zFullVersion    (ntpq_opt_strs+2057)
+#define zFullVersion    (ntpq_opt_strs+2049)
 /* extracted from optcode.tlib near line 342 */
 
 #if defined(ENABLE_NLS)
@@ -665,7 +665,7 @@ doOptRefid(tOptions* pOptions, tOptDesc* pOptDesc)
 
 /* extracted from optmain.tlib near line 945 */
     static char const * const names[2] = {
-        ntpq_opt_strs+2075, ntpq_opt_strs+1045 };
+        ntpq_opt_strs+2063, ntpq_opt_strs+1041 };
 
     if (pOptions <= OPTPROC_EMIT_LIMIT) {
         (void) optionEnumerationVal(pOptions, pOptDesc, names, 2);
@@ -873,7 +873,7 @@ static void bogus_function(void) {
      translate option names.
    */
   /* referenced via ntpqOptions.pzCopyright */
-  puts(_("ntpq 4.2.8p18-RC1\n\
+  puts(_("ntpq 4.2.8p18\n\
 Copyright (C) 1992-2024 The University of Delaware and Network Time Foundation, all rights reserved.\n\
 This is free software. It is licensed for use, modification and\n\
 redistribution under the terms of the NTP License, copies of which\n\
@@ -945,11 +945,11 @@ implied warranty.\n"));
   puts(_("load options from a config file"));
 
   /* referenced via ntpqOptions.pzUsageTitle */
-  puts(_("ntpq - standard NTP query program - Ver. 4.2.8p18-RC1\n\
+  puts(_("ntpq - standard NTP query program - Ver. 4.2.8p18\n\
 Usage:  %s [ -<flag> [<val>] | --<name>[{=| }<val>] ]... [ host ...]\n"));
 
   /* referenced via ntpqOptions.pzFullVersion */
-  puts(_("ntpq 4.2.8p18-RC1"));
+  puts(_("ntpq 4.2.8p18"));
 
   /* referenced via ntpqOptions.pzFullUsage */
   puts(_("<<<NOT-FOUND>>>"));

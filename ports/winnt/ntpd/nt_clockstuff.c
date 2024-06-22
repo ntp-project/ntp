@@ -269,6 +269,7 @@ static void init_small_adjustment(void)
 	    && isc_win32os_versioncheck(6, 2, 0, 0) < 0) {
 		// 6.0 Windows Vista and Windows Server 2008
 		// 6.1 Windows 7 and Windows Server 2008 R2
+		// 6.2 Windows 8
 		//
 		// Windows Vista is documented as affected.
 		// Windows Server 2008 is assumed affected.
@@ -630,11 +631,6 @@ init_winnt_time(void)
 	if (winnt_time_initialized)
 		return;
 
-	/* Set up the Console Handler */
-	if (!SetConsoleCtrlHandler(OnConsoleEvent, TRUE)) {
-		msyslog(LOG_ERR, "Can't set console control handler: %m");
-	}
-
 	/* Set the Event-ID message-file name. */
 	if (!GetModuleFileName(NULL, szMsgPath, sizeof(szMsgPath))) {
 		msyslog(LOG_ERR, "GetModuleFileName(PGM_EXE_FILE) failed: %m");
@@ -642,6 +638,7 @@ init_winnt_time(void)
 	}
 
 	/* Initialize random file before OpenSSL checks */
+	/* Likely can be removed as OpenSSL uses Windows crypto to seed. */
 	if (!init_randfile())
 		msyslog(LOG_ERR, "Unable to initialize .rnd file");
 
@@ -779,7 +776,9 @@ init_winnt_time(void)
 	/* 
 	 * Implement any multimedia timer manipulation requested via -M
 	 * option.  This is rumored to be unneeded on Win8 with the
-	 * introduction of the precise (interpolated) system clock.
+	 * introduction of the precise (interpolated) system clock,
+	 * and this code isn't reached on Windows 8 and later thanks
+	 * to the early return just above.
 	 */
 	if (modify_mm_timer) {
 		if (timeGetDevCaps(&tc, sizeof(tc)) == TIMERR_NOERROR) {
@@ -856,21 +855,22 @@ reset_winnt_time(void)
 	 * Verify this will not call SetSystemTimeAdjustment if
 	 * ntpd is running in ntpdate mode.
 	 */
-	if (sys_leap == LEAP_NOTINSYNC || ls_time_adjustment != 0)
-		SetSystemTimeAdjustment(0, TRUE);	 
-
+	if (sys_leap == LEAP_NOTINSYNC || ls_time_adjustment != 0) {
+		SetSystemTimeAdjustment(0, TRUE);
+	}
 	/*
 	 * Read the current system time, and write it back to
 	 * force CMOS update, only if we are exiting because
 	 * the computer is shutting down and we are already
 	 * synchronized.
 	 */
-	 if (ntservice_systemisshuttingdown() && sys_leap != LEAP_NOTINSYNC) {
+	 if (shall_sync_cmos_time()) {
 		GetSystemTime(&st);
 		SetSystemTime(&st);
-		NLOG(NLOG_SYSEVENT | NLOG_CLOCKINFO)
+		NLOG(NLOG_SYSEVENT | NLOG_CLOCKINFO) {
 			msyslog(LOG_NOTICE, "system is shutting down, CMOS time reset.");
-	}
+		}
+	 }
 }
 
 

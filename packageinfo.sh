@@ -33,6 +33,8 @@
 #
 # To skip over -stable beta1 directly to -RC1, set prerelease=rc.
 #
+# To proceed from  a -stable RC to the release set rcpoint=GO
+#
 # To skip all -stable prereleases and move from one primary or point 
 #   release directly to the next point release, set rcpoint=GO.
 #
@@ -70,7 +72,7 @@ esac
 special=
 
 # prerelease can be empty, 'beta', or 'rc'.
-prerelease=rc
+prerelease=
 
 # ChangeLog starting tag (see also CommitLog-4.1.0)
 CLTAG=NTP_4_2_0
@@ -104,4 +106,4 @@ betapoint=
 # - - prerelease is emptied
 # else (not in RC)
 # - rcpoint is empty and unused (for now).
-rcpoint=1
+rcpoint=

@@ -24,8 +24,8 @@
 void ntservice_init(void);
 void ntservice_isup(void);
 void UpdateSCM(DWORD);
+BOOL shall_sync_cmos_time(void);
 void WINAPI ServiceControl(DWORD dwCtrlCode);
-BOOL ntservice_systemisshuttingdown(void);
 BOOL WINAPI OnConsoleEvent(DWORD dwCtrlType);
 
 #endif	/* NTSERVICE_H */

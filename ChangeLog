@@ -3,11 +3,14 @@
 * [Bug 3924] Windows ntpd gives up on DNS too quickly at OS startup.
              Increase max. DNS retry interval from 32 to 1024 seconds.
              <hart@ntp.org>
+* [Bug 3925] ntpd on Windows 8 and later doesn't set CMOS clock at shutdown.
+             <hart@ntp.org>
 * [Bug 3877] 4.2.8p16 client rejects server response with zero ppoll.
              <hart@ntp.org>
+* Display SSL shared library version number in human form. <hart@ntp.org>          
 
 ---
-(4.2.8p18-RC1) 2024/05/07 Released by Harlan Stenn <stenn@ntp.org>
+(4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>
 * [Bug 3914] Spurious "Unexpected origin timestamp" logged after time
@@ -74,8 +77,6 @@
 * [Bug 3756] Improve OpenSSL library/header detection.
 * [Bug 3753] ntpd fails to start with FIPS-enabled OpenSSL 3. <hart@ntp.org>
 * [Bug 2734] TEST3 prevents initial interleave sync.  Fix from <PoolMUC@web.de>
-* Remove extraneous */ from libparse/ieee754io.c
-* Fix .datecheck target line in Makefile.am.  <stenn@ntp.org>
 * Log failures to allocate receive buffers.  <hart@ntp.org>
 * Remove extraneous */ from libparse/ieee754io.c
 * Fix .datecheck target line in Makefile.am.  <stenn@ntp.org>
@@ -118,8 +119,6 @@
 * Remove configure support for ISC UNIX ca. 1998. <hart@ntp.org>
 * Move NTP_OPENSSL and NTP_CRYPTO_RAND invocations from configure.ac files
   to NTP_LIBNTP. <hart@ntp.org>
-* Move ENABLE_CMAC to ntp_openssl.m4, enabling sntp/tests CMAC unit tests.
-  <hart@ntp.org>
 * Remove dead code: HAVE_U_INT32_ONLY_WITH_DNS. <hart@ntp.org>
 * Eliminate [v]snprintf redefinition warnings on macOS. <hart@ntp.org>
 * Fix clang 14 cast increases alignment warning on Linux. <hart@ntp.org>
