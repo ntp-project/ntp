@@ -5,6 +5,8 @@
              <hart@ntp.org>
 * [Bug 3925] ntpd on Windows 8 and later doesn't set CMOS clock at shutdown.
              <hart@ntp.org>
+* [Bug 3926] pthread_detach() not detected with gcc 14, clang 16.
+             Use pthread_t arg in openldap-thread-check.m4. <hart@ntp.org>
 * [Bug 3877] 4.2.8p16 client rejects server response with zero ppoll.
              <hart@ntp.org>
 * Display SSL shared library version number in human form. <hart@ntp.org>          
