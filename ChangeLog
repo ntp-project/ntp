@@ -1,17 +1,17 @@
 ---
 
-* [Bug 3877] 4.2.8p16 client rejects server response with zero ppoll.
+* [Bug 3930] Windows build mkver.bat races itself. <hart@ntp.org>
+* [Bug 3927] 4.2.8p18 configure reverses -L and -l in $LIBS for OpenSSL test.
+             Reported by Brian Utterback. <hart@ntp.org>
+* [Bug 3926] pthread_detach() not detected with gcc 14, clang 16.
+             Use pthread_t arg in openldap-thread-check.m4. <hart@ntp.org>
+* [Bug 3925] ntpd on Windows 8 and later doesn't set CMOS clock at shutdown.
              <hart@ntp.org>
 * [Bug 3924] Windows ntpd gives up on DNS too quickly at OS startup.
              Increase max. DNS retry interval from 32 to 1024 seconds.
              <hart@ntp.org>
-* [Bug 3925] ntpd on Windows 8 and later doesn't set CMOS clock at shutdown.
+* [Bug 3877] 4.2.8p16 client rejects server response with zero ppoll.
              <hart@ntp.org>
-* [Bug 3926] pthread_detach() not detected with gcc 14, clang 16.
-             Use pthread_t arg in openldap-thread-check.m4. <hart@ntp.org>
-* [Bug 3927] 4.2.8p18 configure reverses -L and -l in $LIBS for OpenSSL test.
-             Reported by Brian Utterback. <hart@ntp.org>
-* [Bug 3930] Windows build mkver.bat races itself. <hart@ntp.org>
 * Display SSL shared library version number in human form. <hart@ntp.org>          
 
 ---
