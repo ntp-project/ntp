@@ -4574,18 +4574,22 @@ peer_name_resolved(
 	u_short			af;
 	const char *		fam_spec;
 
-	(void)gai_errno;
-	(void)service;
-	(void)hints;
+	UNUSED_ARG(gai_errno);
+	UNUSED_ARG(service);
 	ctx = context;
 
-	DPRINTF(1, ("peer_name_resolved(%s) rescode %d\n", name, rescode));
+	af = ctx->family;
+	fam_spec = (AF_INET6 == af)
+			? " (AAAA)"
+			: (AF_INET == af)
+				? " (A)"
+				: "";
 
 	if (rescode) {
 		free(ctx);
 		msyslog(LOG_ERR,
-			"giving up resolving host %s: %s (%d)",
-			name, gai_strerror(rescode), rescode);
+			"giving up resolving host %s%s: %s (%d)",
+			name, fam_spec, gai_strerror(rescode), rescode);
 		return;
 	}
 
@@ -4594,18 +4598,9 @@ peer_name_resolved(
 		memcpy(&peeraddr, res->ai_addr, res->ai_addrlen);
 		if (is_sane_resolved_address(&peeraddr,
 					     ctx->host_mode)) {
-			NLOG(NLOG_SYSINFO) {
-				af = ctx->family;
-				fam_spec = (AF_INET6 == af)
-					       ? "(AAAA) "
-					       : (AF_INET == af)
-						     ? "(A) "
-						     : "";
-				msyslog(LOG_INFO, "DNS %s %s-> %s",
+			LOGIF(SYSINFO, (LOG_INFO, "DNS %s%s -> %s",
 					name, fam_spec,
-					stoa(&peeraddr));
-			}
-
+					stoa(&peeraddr)));
 			/* 
 			 * peer_clear needs to know if this association was specified
 			 * in the startup configuration file to set the next poll time.
