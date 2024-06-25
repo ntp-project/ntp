@@ -15,7 +15,7 @@ MOSTLYCLEANFILES	=
 AM_CFLAGS	= $(NTP_HARD_CFLAGS) $(CC_NOFORMAT)
 AM_CPPFLAGS	= $(NTP_HARD_CPPFLAGS) -I$(top_srcdir)/../include
 
-libopts.c:		$(BUILT_SOURCES)
+$(srcdir)/libopts.c:	$(BUILT_SOURCES)
 	@: do-nothing rule to avoid default SCCS get
 
 

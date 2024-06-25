@@ -482,7 +482,8 @@ AC_DEFUN([LIBOPTS_CHECK_COMMON],[
        [Use the supplied libopts tearoff code]),[
     if test x$enableval = xyes ; then
        AC_MSG_NOTICE([Using supplied libopts tearoff])
-       LIBOPTS_CFLAGS='-I$(top_srcdir)/AO_Libopts_Dir'
+       # Most included files are in srcdir, substitute stdnoreturn.h is in builddir.
+       LIBOPTS_CFLAGS='-I$(top_srcdir)/AO_Libopts_Dir -I$(top_builddir)/AO_Libopts_Dir'
        NEED_LIBOPTS_DIR=true
        LIBOPTS_LDADD='$(top_builddir)/AO_Libopts_Dir/libopts.la'
     fi])
