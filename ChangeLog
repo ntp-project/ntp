@@ -1,5 +1,6 @@
 ---
 
+* [Bug 3932] Ignore teredo interfaces in Windows ntpd. <hart@ntp.org>
 * [Bug 3931] Libopts is not respecting VPATH. <hart@ntp.org>
 * [Bug 3930] Windows build mkver.bat races itself. <hart@ntp.org>
 * [Bug 3927] 4.2.8p18 configure reverses -L and -l in $LIBS for OpenSSL test.
