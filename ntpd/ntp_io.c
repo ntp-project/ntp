@@ -1736,6 +1736,17 @@ update_interfaces(
 
 		DPRINT_INTERFACE(4, (&enumep, "examining ", "\n"));
 
+#ifdef SYS_WINNT
+		/*
+		 * https://bugs.ntp.org/3932 Ignore teredo IFs in Windows ntpd
+		 */
+		static const char szTeredo[] = "Teredo Tunneling Pseudo-Interfa";
+		if (!memcmp(szTeredo, enumep.name,
+			    min(sizeof szTeredo, sizeof enumep.name))) {
+			continue;
+		}
+#endif
+
 		/*
 		 * Check if and how we are going to use the interface.
 		 */
