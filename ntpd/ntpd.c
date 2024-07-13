@@ -966,7 +966,7 @@ ntpdmain(
 
 		while (ifacect-- > 0) {
 			add_nic_rule(
-				is_ip_address(*ifaces, AF_UNSPEC, &addr)
+				sau_from_string(*ifaces, AF_UNSPEC, &addr)
 					? MATCH_IFADDR
 					: MATCH_IFNAME,
 				*ifaces, -1, ACTION_LISTEN);

@@ -32,7 +32,6 @@
 
 #include "ntp_libopts.h"
 #include "ntpdc-opts.h"
-#include "safecast.h"
 
 #ifdef SYS_VXWORKS
 				/* vxWorks needs mode flag -casey*/
@@ -965,8 +964,7 @@ sendrequest(
 	get_systime(&ts);
 	L_ADD(&ts, &delay_time);
 	HTONL_FP(&ts, ptstamp);
-	maclen = authencrypt(
-		info_auth_keyid, (void *)&qpkt, size2int_chk(reqsize));
+	maclen = authencrypt(info_auth_keyid, (void *)&qpkt, reqsize);
 	if (!maclen) {  
 		fprintf(stderr, "Key not found\n");
 		return 1;

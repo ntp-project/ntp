@@ -3575,8 +3575,8 @@ clock_select(void)
 	indx_size = ALIGNED_SIZE(nlist * 2 * sizeof(*indx));
 	octets = endpoint_size + peers_size + indx_size;
 	endpoint = erealloc(endpoint, octets);
-	peers = INC_ALIGNED_PTR(endpoint, endpoint_size);
-	indx = INC_ALIGNED_PTR(peers, peers_size);
+	peers = INCR_PTR(endpoint, endpoint_size);
+	indx = INCR_PTR(peers, peers_size);
 
 	/*
 	 * Initially, we populate the island with all the rifraff peers

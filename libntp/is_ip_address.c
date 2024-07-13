@@ -1,5 +1,5 @@
 /*
- * is_ip_address
+ * sau_from_string
  *
  */
 
@@ -9,7 +9,6 @@
 
 #include "ntp_assert.h"
 #include "ntp_stdlib.h"
-#include "safecast.h"
 
 /* Don't include ISC's version of IPv6 variables and structures */
 #define ISC_IPV6_H 1
@@ -18,13 +17,11 @@
 
 
 /*
- * Code to tell if we have an IP address
- * If we have then return the sockaddr structure
- * and set the return value
- * see the bind9/getaddresses.c for details
+ * sau_from_string() - sockaddr_u from IP address string
+ * Formerly named is_ip_address()
  */
 int
-is_ip_address(
+sau_from_string(
 	const char *	host,
 	u_short		af,
 	sockaddr_u *	addr
@@ -37,8 +34,8 @@ is_ip_address(
 	char tmpbuf[128];
 	char *pch;
 
-	REQUIRE(host != NULL);
-	REQUIRE(addr != NULL);
+	DEBUG_REQUIRE(host != NULL);
+	DEBUG_REQUIRE(addr != NULL);
 
 	ZERO_SOCK(addr);
 
@@ -74,7 +71,7 @@ is_ip_address(
 			hints.ai_flags |= AI_NUMERICHOST;
 			if (getaddrinfo(tmpbuf, NULL, &hints, &result) == 0) {
 				AF(addr) = AF_INET6;
-				resaddr6 = UA_PTR(struct sockaddr_in6, result->ai_addr);
+				resaddr6 = QUIET_ALIGN_WARN(result->ai_addr);
 				SET_ADDR6N(addr, resaddr6->sin6_addr);
 				SET_SCOPE(addr, resaddr6->sin6_scope_id);
 

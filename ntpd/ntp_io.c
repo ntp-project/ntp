@@ -41,7 +41,6 @@
 #include "timevalops.h"
 #include "timespecops.h"
 #include "ntpd-opts.h"
-#include "safecast.h"
 
 /* Don't include ISC's version of IPv6 variables and structures */
 #define ISC_IPV6_H 1
@@ -1116,7 +1115,7 @@ add_nic_rule(
 	} else if (MATCH_IFADDR == match_type) {
 		REQUIRE(NULL != if_name);
 		/* set rule->addr */
-		is_ip = is_ip_address(if_name, AF_UNSPEC, &rule->addr);
+		is_ip = sau_from_string(if_name, AF_UNSPEC, &rule->addr);
 		REQUIRE(is_ip);
 	} else
 		REQUIRE(NULL == if_name);

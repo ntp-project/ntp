@@ -15,7 +15,7 @@ AC_CACHE_CHECK(
 	    [[
 		void *fnames = facilitynames;
 	    ]]
-	)]
+	)],
 	[ac_cv_HAVE_SYSLOG_FACILITYNAMES=yes],
 	[ac_cv_HAVE_SYSLOG_FACILITYNAMES=no]
     )]

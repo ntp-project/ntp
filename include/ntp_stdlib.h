@@ -168,7 +168,7 @@ extern	int	atouint		(const char *, u_long *);
 extern	int	hextoint	(const char *, u_long *);
 extern	const char *	humanlogtime	(void);
 extern	const char *	humantime	(time_t);
-extern int	is_ip_address	(const char *, u_short, sockaddr_u *);
+extern int	sau_from_string	(const char *, u_short, sockaddr_u *);
 extern	char *	mfptoa		(u_int32, u_int32, short);
 extern	char *	mfptoms		(u_int32, u_int32, short);
 extern	const char * modetoa	(size_t);
