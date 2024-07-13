@@ -1,4 +1,17 @@
 ---
+
+* [Bug 3933] Restrict structure misaligned on SPARC64. <hart@ntp.org>
+* Reorder restrict_u layout to improve alignment on all platforms.
+  <hart@ntp.org>
+* Correct match_restrict[46]_addr() logic expiring temporary restrictions.
+  <hart@ntp.org>
+* Rename is_ip_address() to sau_from_string() to better reflect use.
+  <hart@ntp.org>
+* Get rid of hack to quiet alignment warnings (safecast.h). <hart@ntp.org>
+* Fix bug in m4sh macro NTP_FACILITYNAMES that meant detection always failed.
+  <hart@ntp.org>
+
+---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>

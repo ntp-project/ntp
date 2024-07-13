@@ -857,18 +857,18 @@ struct restrict_u_tag {
 	restrict_u *	link;		/* link to next entry */
 	u_int32		count;		/* number of packets matched */
 	u_int32		expire;		/* valid until current_time */
-	u_short		rflags;		/* restrict (accesslist) flags */
 	u_int32		mflags;		/* match flags */
+	u_short		rflags;		/* restrict (accesslist) flags */
 	short		ippeerlimit;	/* limit of associations matching */
 	union {				/* variant starting here */
 		res_addr4 v4;
 		res_addr6 v6;
 	} u;
 };
-#define	V4_SIZEOF_RESTRICT_U	(offsetof(restrict_u, u)	\
-				 + sizeof(res_addr4))
-#define	V6_SIZEOF_RESTRICT_U	(offsetof(restrict_u, u)	\
-				 + sizeof(res_addr6))
+#define	V4_SIZEOF_RESTRICT_U	ALIGNED_SIZE(  offsetof(restrict_u, u)	\
+					     + sizeof(res_addr4))
+#define	V6_SIZEOF_RESTRICT_U	ALIGNED_SIZE(  offsetof(restrict_u, u)	\
+					     + sizeof(res_addr6))
 
 /* restrictions for (4) a given address */
 typedef struct r4addr_tag	r4addr;

@@ -29,7 +29,6 @@
 #include "ntp.h"
 #include "ntp_stdlib.h"
 #include "ntp_lineedit.h"
-#include "safecast.h"
 
 #define MAXEDITLINE	512
 

@@ -49,7 +49,6 @@
 #include <ssl_applink.c>
 
 #include "ntp_libopts.h"
-#include "safecast.h"
 
 #ifdef SYS_VXWORKS		/* vxWorks needs mode flag -casey*/
 # define open(name, flags)   open(name, flags, 0777)
@@ -3474,8 +3473,8 @@ rawprint(
 /*
  * Global data used by the cooked output routines
  */
-int out_chars;		/* number of characters output */
-int out_linecount;	/* number of characters output on this line */
+size_t out_chars;	/* number of characters output */
+size_t out_linecount;	/* number of characters output on this line */
 
 
 /*
@@ -3499,12 +3498,12 @@ output(
 	const char *value
 	)
 {
-	int len;
+	size_t len;
 
 	/* strlen of "name=value" */
-	len = size2int_sat(strlen(name) + 1 + strlen(value));
+	len = strlen(name) + 1 + strlen(value);
 
-	if (out_chars != 0) {
+	if (out_chars > 0) {
 		out_chars += 2;
 		if ((out_linecount + len + 2) > MAXOUTLINE) {
 			fputs(",\n", fp);
