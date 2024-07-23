@@ -1,4 +1,9 @@
 ---
+
+* [Bug 3929] 4.2.8p18 -Werror -Wincompatible-pointer-types breaks w/md5.h.
+             Wrap MD5Update() calls for varying declarations.  <hart@ntp.org>
+
+---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>

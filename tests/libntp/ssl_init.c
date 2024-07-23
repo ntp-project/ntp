@@ -25,7 +25,7 @@ void test_CMACKeyName(void);
 // keytype_from_text()
 void
 test_MD5KeyTypeWithoutDigestLength(void) {
-	TEST_ASSERT_EQUAL(KEY_TYPE_MD5, keytype_from_text("MD5", NULL));
+	TEST_ASSERT_EQUAL(NID_md5, keytype_from_text("MD5", NULL));
 }
 
 void
@@ -33,7 +33,7 @@ test_MD5KeyTypeWithDigestLength(void) {
 	size_t digestLength;
 	size_t expected = MD5_LENGTH;
 
-	TEST_ASSERT_EQUAL(KEY_TYPE_MD5, keytype_from_text("MD5", &digestLength));
+	TEST_ASSERT_EQUAL(NID_md5, keytype_from_text("MD5", &digestLength));
 	TEST_ASSERT_EQUAL(expected, digestLength);
 }
 
@@ -71,7 +71,7 @@ test_CMACKeyTypeWithDigestLength(void) {
 // keytype_name()
 void
 test_MD5KeyName(void) {
-	TEST_ASSERT_EQUAL_STRING("MD5", keytype_name(KEY_TYPE_MD5));
+	TEST_ASSERT_EQUAL_STRING("MD5", keytype_name(NID_md5));
 }
 
 
