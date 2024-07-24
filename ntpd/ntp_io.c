@@ -1917,15 +1917,14 @@ update_interfaces(
 			}
 			new_interface_found = TRUE;
 			DPRINT_INTERFACE(3,
-				(ep, "updating ", " new - created\n"));
-		}
-		else {
+				(ep2, "updating ", " new - created\n"));
+		} else {
 			DPRINT_INTERFACE(3,
-				(ep, "updating ", " new - FAILED"));
+				(ep2, "updating ", " new - FAILED"));
 
 			msyslog(LOG_ERR,
 				"cannot bind address %s",
-				stoa(&ep->sin));
+				stoa(&ep2->sin));
 		}
 		free(ep2);
 	}
