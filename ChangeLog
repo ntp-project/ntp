@@ -1,5 +1,7 @@
 ---
 
+* [Bug 3928] ntpd 4.2.8p18 crash when bringing up net interface fails.
+             <hart@ntp.org>
 * [Bug 3929] 4.2.8p18 -Werror -Wincompatible-pointer-types breaks w/md5.h.
              Wrap MD5Update() calls for varying declarations.  <hart@ntp.org>
 
