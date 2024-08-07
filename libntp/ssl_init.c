@@ -76,8 +76,8 @@ ssl_check_version(void)
 
 		buf = lib_getbuf();
 		snprintf(buf, LIB_BUFLENGTH,
-			"Using libcrypto %d.%d.%d,"
-			" built for %d.%d.%d.\n",
+			"Using libcrypto %lu.%lu.%lu,"
+			" built for %lu.%lu.%lu.\n",
 			SSLV_MAJOR(rv), SSLV_MINOR(rv), SSLV_PATCH(rv),
 			SSLV_MAJOR(bv), SSLV_MINOR(bv), SSLV_PATCH(bv));
 		msyslog(LOG_WARNING, "%s", buf);
