@@ -81,7 +81,7 @@ PrepareAuthenticationTest(
 	key_ptr->next = NULL;
 	key_ptr->key_id = key_id;
 	key_ptr->key_len = key_len;
-	strncpy(key_ptr->typen, type, sizeof(key_ptr->typen));
+	strlcpy(key_ptr->typen, type, sizeof(key_ptr->typen));
 
 	TEST_ASSERT_TRUE(key_len < sizeof(key_ptr->key_seq));
 
