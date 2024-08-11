@@ -1,4 +1,8 @@
 ---
+
+* [Bug 3942] DECL_SYSCALL detection does not work on illumos. <hart@ntp.org>
+
+---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>

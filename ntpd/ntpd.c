@@ -229,13 +229,6 @@ char const *progname;
 
 int was_alarmed;
 
-#ifdef DECL_SYSCALL
-/*
- * We put this here, since the argument profile is syscall-specific
- */
-extern int syscall	(int, ...);
-#endif /* DECL_SYSCALL */
-
 
 #if !defined(SIM) && defined(SIGDIE1)
 static volatile int signalled	= 0;
