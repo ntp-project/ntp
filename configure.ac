@@ -35,7 +35,7 @@ AC_PRESERVE_HELP_ORDER
 # the date YYYYMMDD optionally with -HHMM if there is more than one
 # bump in a day.
 
-ntp_configure_cache_version=20240218
+ntp_configure_cache_version=20240811
 
 # When the cache version of config.cache and configure do not
 # match, NTP_CACHEVERSION will flush the cache.
@@ -283,7 +283,7 @@ case "$host" in
     ;;
 esac
 
-AC_CHECK_HEADERS([bstring.h sys/procctl.h])
+AC_CHECK_HEADERS([bstring.h sys/procctl.h sys/syscall.h])
 AC_CHECK_HEADER(
     [dns_sd.h],
     [AC_SEARCH_LIBS(
@@ -1102,6 +1102,9 @@ AC_CACHE_CHECK(
 		#ifdef HAVE_UNISTD_H
 		# include <unistd.h>
 		#endif
+		#ifdef HAVE_SYS_SYSCALL_H
+		# include <sys/syscall.h>
+		#endif
 	    ]],
 	    [[
 		extern int syscall (int, ...);
@@ -1113,7 +1116,7 @@ AC_CACHE_CHECK(
 )
 case "$ntp_cv_decl_syscall" in
  yes)
-    AC_DEFINE([DECL_SYSCALL], [1], [Declare syscall()?])
+    AC_DEFINE([DECL_SYSCALL], [1], [Need to declare syscall()?])
 esac
 
 case "$host" in
