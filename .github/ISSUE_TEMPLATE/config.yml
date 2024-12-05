@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+    - name: File a Bug Report or Submit a Patch
+      url: https://bugs.ntp.org
+      about: Report a reproducible bug or regression in NTP code.
+    - name: Report a Security Vulnerability
+      url: https://www.ntp.org/support/securitynotice/
+      about: Please report vulnerabilities by PGP-encrypted email to the NTF Security Officer Team.
+    - name: Fix a Documentation Issue
+      url: https://github.com/nwtime/ntpwww
+      about: Submit a pull request for website documentation.
+    - name: Questions and Help
+      url: https://lists.ntp.org/sympa/info/questions
+      about: Search the questions archive or ask a question on the mailing list.

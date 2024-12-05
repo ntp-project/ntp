@@ -1,7 +1,7 @@
 /*
  *  EDIT THIS FILE WITH CAUTION  (sntp-opts.c)
  *
- *  It has been AutoGen-ed  May 25, 2024 at 02:36:25 AM by AutoGen 5.18.16
+ *  It has been AutoGen-ed  November 28, 2024 at 12:04:01 AM by AutoGen 5.18.16
  *  From the definitions    sntp-opts.def
  *  and the template file   options
  *
@@ -74,7 +74,7 @@ extern FILE * option_usage_fp;
  *  static const strings for sntp options
  */
 static char const sntp_opt_strs[2564] =
-/*     0 */ "sntp 4.3.105\n"
+/*     0 */ "sntp 4.3.106\n"
             "Copyright (C) 1992-2024 The University of Delaware and Network Time Foundation, all rights reserved.\n"
             "This is free software. It is licensed for use, modification and\n"
             "redistribution under the terms of the NTP License, copies of which\n"
@@ -160,7 +160,7 @@ static char const sntp_opt_strs[2564] =
 /*  2312 */ "LOAD_OPTS\0"
 /*  2322 */ "no-load-opts\0"
 /*  2335 */ "SNTP\0"
-/*  2340 */ "sntp - standard Simple Network Time Protocol client program - Ver. 4.3.105\n"
+/*  2340 */ "sntp - standard Simple Network Time Protocol client program - Ver. 4.3.106\n"
             "Usage:  %s [ -<flag> [<val>] | --<name>[{=| }<val>] ]... \\\n"
             "\t\t[ hostname-or-IP ...]\n\0"
 /*  2499 */ "$HOME\0"
@@ -168,7 +168,7 @@ static char const sntp_opt_strs[2564] =
 /*  2507 */ ".ntprc\0"
 /*  2514 */ "https://bugs.ntp.org, bugs@ntp.org\0"
 /*  2549 */ "\n\0"
-/*  2551 */ "sntp 4.3.105";
+/*  2551 */ "sntp 4.3.106";
 
 /**
  *  ipv4 option description with
@@ -1180,7 +1180,7 @@ static void bogus_function(void) {
      translate option names.
    */
   /* referenced via sntpOptions.pzCopyright */
-  puts(_("sntp 4.3.105\n\
+  puts(_("sntp 4.3.106\n\
 Copyright (C) 1992-2024 The University of Delaware and Network Time Foundation, all rights reserved.\n\
 This is free software. It is licensed for use, modification and\n\
 redistribution under the terms of the NTP License, copies of which\n\
@@ -1270,7 +1270,7 @@ implied warranty.\n"));
   puts(_("load options from a config file"));
 
   /* referenced via sntpOptions.pzUsageTitle */
-  puts(_("sntp - standard Simple Network Time Protocol client program - Ver. 4.3.105\n\
+  puts(_("sntp - standard Simple Network Time Protocol client program - Ver. 4.3.106\n\
 Usage:  %s [ -<flag> [<val>] | --<name>[{=| }<val>] ]... \\\n\
 \t\t[ hostname-or-IP ...]\n"));
 
@@ -1278,7 +1278,7 @@ Usage:  %s [ -<flag> [<val>] | --<name>[{=| }<val>] ]... \\\n\
   puts(_("\n"));
 
   /* referenced via sntpOptions.pzFullVersion */
-  puts(_("sntp 4.3.105"));
+  puts(_("sntp 4.3.106"));
 
   /* referenced via sntpOptions.pzFullUsage */
   puts(_("<<<NOT-FOUND>>>"));

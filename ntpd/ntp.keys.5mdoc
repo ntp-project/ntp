@@ -1,9 +1,9 @@
-.Dd May 25 2024
+.Dd November 28 2024
 .Dt NTP_KEYS 5mdoc File Formats
 .Os FreeBSD 12.1-RELEASE_SI
 .\"  EDIT THIS FILE WITH CAUTION  (ntp.mdoc)
 .\"
-.\"  It has been AutoGen-ed  May 25, 2024 at 02:38:09 AM by AutoGen 5.18.16
+.\"  It has been AutoGen-ed  November 28, 2024 at 12:05:46 AM by AutoGen 5.18.16
 .\"  From the definitions    ntp.keys.def
 .\"  and the template file   agmdoc-file.tpl
 .Sh NAME
