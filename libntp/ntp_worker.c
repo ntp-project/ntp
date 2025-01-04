@@ -364,5 +364,5 @@ worker_idle_timer_fired(void)
 
 
 #else	/* !WORKER follows */
-int ntp_worker_nonempty_compilation_unit;
+NONEMPTY_TRANSLATION_UNIT
 #endif

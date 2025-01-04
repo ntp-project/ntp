@@ -241,6 +241,7 @@ static	char   *insert_cmac	(char *list);
 # ifdef HAVE_EVP_MD_DO_ALL_SORTED
 static	void	list_md_fn	(const EVP_MD *m, const char *from,
 				 const char *to, void *arg);
+static	bool	digest_alg_works(const EVP_MD *m, const char *name);
 # endif /* HAVE_EVP_MD_DO_ALL_SORTED */
 #endif /* OPENSSL */
 #endif /* !defined(BUILD_AS_LIB) */
@@ -252,7 +253,7 @@ pgetc(
 	const char *cp
 	)
 {
-	return (int)*(const unsigned char*)cp;
+	return (int)*(const u_char *)cp;
 }
 
 
@@ -363,7 +364,7 @@ int showhostnames = 1;				/* show host names by default */
 int wideremote = 0;				/* show wide remote names? */
 
 int ai_fam_templ;				/* address family */
-int ai_fam_default;				/* default address family */
+int ai_fam_default = AF_UNSPEC;			/* default address family */
 SOCKET sockfd;					/* fd socket is opened on */
 int havehost = 0;				/* set to 1 when host open */
 int s_port = 0;
@@ -524,6 +525,8 @@ ntpqmain(
 	if (!ipv6_works)
 		ai_fam_default = AF_INET;
 
+	progname = argv[0];
+
 	/* Fixup keytype's help based on available digest names */
 
 	{
@@ -532,7 +535,7 @@ ntpqmain(
 
 	    list = list_digest_names();
 
-	    for (icmd = 0; icmd < sizeof(builtins)/sizeof(*builtins); icmd++) {
+	    for (icmd = 0; icmd < COUNTOF(builtins); icmd++) {
 		if (strcmp("keytype", builtins[icmd].keyword) == 0) {
 		    break;
 		}
@@ -540,7 +543,7 @@ ntpqmain(
 
 	    /* CID: 1295478 */
 	    /* This should only "trip" if "keytype" is removed from builtins */
-	    INSIST(icmd < sizeof(builtins)/sizeof(*builtins));
+	    INSIST(icmd < COUNTOF(builtins));
 
 #ifdef OPENSSL
 	    builtins[icmd].desc[0] = "digest-name";
@@ -556,8 +559,6 @@ ntpqmain(
 	    builtins[icmd].comment = msg;
 	    free(list);
 	}
-
-	progname = argv[0];
 
 	{
 		int optct = ntpOptionProcess(&ntpqOptions, argc, argv);
@@ -903,7 +904,7 @@ sendpkt(
 	)
 {
 	if (debug >= 3)
-		printf("Sending %zu octets\n", xdatalen);
+		printf("Sending %u octets\n", (u_int)xdatalen);
 
 	if (send(sockfd, xdata, xdatalen, 0) == -1) {
 		warning("write to %s failed", currenthost);
@@ -1332,8 +1333,8 @@ sendrequest(
 	 */
 	if (qsize > CTL_MAX_DATA_LEN) {
 		fprintf(stderr,
-			"***Internal error!  qsize (%zu) too large\n",
-			qsize);
+			"***Internal error!  qsize (%u) too large\n",
+			(u_int)qsize);
 		return 1;
 	}
 
@@ -1409,11 +1410,22 @@ sendrequest(
 	if (!maclen) {
 		fprintf(stderr, "Key not found\n");
 		return 1;
-	} else if ((size_t)maclen != (info_auth_hashlen + sizeof(keyid_t))) {
+	}
+	else if (maclen != info_auth_hashlen + sizeof(keyid_t)) {
 		fprintf(stderr,
-			"%zu octet MAC, %zu expected with %zu octet digest\n",
-			maclen, (info_auth_hashlen + sizeof(keyid_t)),
-			info_auth_hashlen);
+			"%u octet MAC, %u expected with %u octet digest\n",
+			(u_int)maclen, (u_int)(sizeof(keyid_t) + info_auth_hashlen),
+			(u_int)info_auth_hashlen);
+		return 1;
+	}
+
+	/*
+	 * Check to make sure the data will fit in one packet
+	 */
+	if (pktsize + maclen > CTL_MAX_DATA_LEN) {
+		fprintf(stderr,
+			"***Internal error!  packet too large (%u)\n",
+			(u_int)(pktsize + maclen));
 		return 1;
 	}
 
@@ -2648,10 +2660,10 @@ keytype(
 	size_t		digest_len;
 	int		key_type;
 
-	if (!pcmd->nargs) {
-		fprintf(fp, "keytype is %s with %lu octet digests\n",
+	if (0 == pcmd->nargs) {
+		fprintf(fp, "keytype is %s with %u bit digests\n",
 			keytype_name(info_auth_keytype),
-			(u_long)info_auth_hashlen);
+			8u * (u_int)info_auth_hashlen);
 		return;
 	}
 
@@ -2659,10 +2671,10 @@ keytype(
 	digest_len = 0;
 	key_type = keytype_from_text(digest_name, &digest_len);
 
-	if (!key_type) {
+	if (0 == key_type) {
 		fprintf(fp, "keytype is not valid. "
 #ifdef OPENSSL
-			"Type \"help keytype\" for the available digest types.\n");
+			"\"help keytype\" lists the available digests.\n");
 #else
 			"Only \"md5\" is available.\n");
 #endif
@@ -2670,7 +2682,8 @@ keytype(
 	}
 
 	info_auth_keytype = key_type;
-	info_auth_hashlen = digest_len;
+	/* We use only the first 20 octets of longer digests */
+	info_auth_hashlen = min(MAX_MDG_LEN, digest_len);
 }
 
 
@@ -3910,12 +3923,6 @@ ntpq_custom_opt_handler(
  * Obtain list of digest names
  */
 
-#if defined(OPENSSL) && !defined(HAVE_EVP_MD_DO_ALL_SORTED)
-# if defined(_MSC_VER) && OPENSSL_VERSION_NUMBER >= 0x10100000L
-#  define HAVE_EVP_MD_DO_ALL_SORTED
-# endif
-#endif
-
 #ifdef OPENSSL
 # ifdef HAVE_EVP_MD_DO_ALL_SORTED
 #  define K_PER_LINE	8
@@ -3942,59 +3949,107 @@ list_md_fn(const EVP_MD *m, const char *from, const char *to, void *arg)
 		return; /* Ignore aliases */
 	}
 
-	/* Discard MACs that NTP won't accept. */
-	/* Keep this consistent with keytype_from_text() in ssl_init.c. */
-	if (EVP_MD_size(m) > MAX_MDG_LEN) {
-		return;
-	}
-
 	name = EVP_MD_name(m);
 	len = strlen(name) + 1;
 
 	/* There are duplicates.  Discard if name has been seen. */
-
-	for (seen = hstate->seen; *seen; seen++)
-		if (!strcasecmp(*seen, name))
+	for (seen = hstate->seen; *seen; seen++) {
+		if (!strcasecmp(*seen, name)) {
 			return;
+		}
+	}
 
+	if (!digest_alg_works(m, name)) {
+		return;
+	}
 	n = (seen - hstate->seen) + 2;
 	hstate->seen = erealloc((void *)hstate->seen, n * sizeof(*seen));
 	hstate->seen[n-2] = name;
 	hstate->seen[n-1] = NULL;
 
-	if (hstate->list != NULL)
+	if (hstate->list != NULL) {
 		len += strlen(hstate->list);
-
+	}
 	len += (hstate->idx >= K_PER_LINE)
-	    ? strlen(K_NL_PFX_STR)
-	    : strlen(K_DELIM_STR);
+		? strlen(K_NL_PFX_STR)
+		: strlen(K_DELIM_STR);
 
 	if (hstate->list == NULL) {
-		hstate->list = (char *)emalloc(len);
+		hstate->list = emalloc(len);
 		hstate->list[0] = '\0';
 	} else {
-		hstate->list = (char *)erealloc(hstate->list, len);
+		hstate->list = erealloc(hstate->list, len);
 	}
 
-	sprintf(hstate->list + strlen(hstate->list), "%s%s",
+	snprintf(hstate->list + strlen(hstate->list), len, "%s%s",
 		((hstate->idx >= K_PER_LINE) ? K_NL_PFX_STR : K_DELIM_STR),
 		name);
 
-	if (hstate->idx >= K_PER_LINE)
+	if (hstate->idx >= K_PER_LINE) {
 		hstate->idx = 1;
-	else
+	} else {
 		hstate->idx++;
+	}
 }
-#  endif /* !defined(BUILD_AS_LIB) */
 
-#  ifndef BUILD_AS_LIB
+/*
+ * digest_alg_works()
+ * Determine which of the OpenSSL-enumerated digest algorithms actually
+ * work in this installation.  Use of FIPS OpenSSL will make that a subset.
+ */
+static bool
+digest_alg_works(
+	const EVP_MD *	m,
+	const char *	name
+	)
+{
+	u_char		test_pkt[sizeof(pay_u)];
+	const size_t	pay_len = MIN_V4_PKT_LEN;
+	void *		vp_pkt;
+	pay_u *		pp_pkt;
+	int		i;
+	const char *	secret;
+	size_t		secret_len;
+	int		nid;
+	size_t		mac_len;
+	bool		works;
+
+	/* Auth'd NTP packet sizes must be a multiple of 4 */
+	DEBUG_REQUIRE(0 == sizeof(test_pkt) % sizeof(u_int32));
+	vp_pkt = test_pkt;
+	pp_pkt = vp_pkt;
+
+	/* fill test payload with noise */
+	for (i = 0; i < pay_len / sizeof(pp_pkt->ui[0]); i++) {
+		pp_pkt->ui[i] = (u_int32)ntp_random();
+	}
+
+	/* arbitrarily use the program name as the irrelevant test key */
+	secret = progname;
+	secret_len = strlen(progname);
+
+	/* don't log digest errors for this use */
+	suppress_digest_errors = TRUE;
+	nid = EVP_MD_type(m);
+	mac_len = MD5authencrypt(nid, secret, secret_len, pp_pkt->ui, pay_len);
+	works = (0 != mac_len);
+	if (works) {
+		works = MD5authdecrypt(nid, secret, secret_len, pp_pkt->ui, pay_len, 
+				       mac_len, 1);
+	}
+	suppress_digest_errors = FALSE;
+
+	return works;
+}
+
+
 /* Insert CMAC into SSL digests list */
 static char *
 insert_cmac(char *list)
 {
-#ifdef ENABLE_CMAC
-	int insert;
-	size_t len;
+#   ifdef ENABLE_CMAC
+	bool	insert;
+	size_t	len;
 
 
 	/* If list empty, we need to insert CMAC on new line */
@@ -4090,12 +4145,12 @@ insert_cmac(char *list)
 			}
 		} /* insert */
 	} /* List not empty */
-#endif /*ENABLE_CMAC*/
+#   endif /* ENABLE_CMAC */
 	return list;
 }
-#  endif /* !defined(BUILD_AS_LIB) */
-# endif
-#endif
+#  endif	/* !BUILD_AS_LIB */
+# endif		/* HAVE_EVP_MD_DO_ALL_SORTED */
+#endif		/* OPENSSL */
 
 
 #ifndef BUILD_AS_LIB
@@ -4108,25 +4163,22 @@ list_digest_names(void)
 # ifdef HAVE_EVP_MD_DO_ALL_SORTED
 	struct hstate hstate = { NULL, NULL, K_PER_LINE+1 };
 
-	/* replace calloc(1, sizeof(const char *)) */
-	hstate.seen = emalloc_zero(sizeof(const char*));
+	hstate.seen = emalloc_zero(sizeof(*hstate.seen));
 
 	INIT_SSL();
-	EVP_MD_do_all_sorted(list_md_fn, &hstate);
+	EVP_MD_do_all_sorted(&list_md_fn, &hstate);
 	list = hstate.list;
 	free((void *)hstate.seen);
 
 	list = insert_cmac(list);	/* Insert CMAC into SSL digests list */
-
 # else
-	list = (char *)emalloc(sizeof("md5, others (upgrade to OpenSSL-1.0 for full list)"));
-	strcpy(list, "md5, others (upgrade to OpenSSL-1.0 for full list)");
+	list = NULL;
+	my_easprintf(&list, "md5, others (upgrade to OpenSSL-1.0 for full list)");
 # endif
 #else
-	list = (char *)emalloc(sizeof("md5"));
-	strcpy(list, "md5");
+	list = NULL;
+	my_easprintf(&list, "md5");
 #endif
-
 	return list;
 }
 #endif /* !defined(BUILD_AS_LIB) */
@@ -4135,15 +4187,14 @@ list_digest_names(void)
 static volatile size_t		ctrlc_stack_len = 0;
 static volatile Ctrl_C_Handler	ctrlc_stack[CTRLC_STACK_MAX];
 
-
-
 int/*BOOL*/
 push_ctrl_c_handler(
 	Ctrl_C_Handler func
 	)
 {
 	size_t size = ctrlc_stack_len;
-	if (func && (size < CTRLC_STACK_MAX)) {
+
+	if (NULL != func && size < COUNTOF(ctrlc_stack)) {
 		ctrlc_stack[size] = func;
 		ctrlc_stack_len = size + 1;
 		return TRUE;
@@ -4157,9 +4208,10 @@ pop_ctrl_c_handler(
 	)
 {
 	size_t size = ctrlc_stack_len;
-	if (size) {
+
+	if (size > 0) {
 		--size;
-		if (func == NULL || func == ctrlc_stack[size]) {
+		if (NULL == func || func == ctrlc_stack[size]) {
 			ctrlc_stack_len = size;
 			return TRUE;
 		}
@@ -4189,13 +4241,13 @@ my_easprintf(
 	va_list	va;
 	int	prc;
 	size_t	len = 128;
-	char *	buf = emalloc(len);
+	char *	buf = NULL;
 
   again:
 	/* Note: we expect the memory allocation to fail long before the
 	 * increment in buffer size actually overflows.
 	 */
-	buf = (buf) ? erealloc(buf, len) : emalloc(len);
+	buf = erealloc(buf, len);
 
 	va_start(va, fmt);
 	prc = vsnprintf(buf, len, fmt, va);

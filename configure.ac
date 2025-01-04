@@ -909,7 +909,7 @@ case "$host" in
     ;;
 esac
 AC_CHECK_FUNCS([setlinebuf setpgid setpriority setsid setvbuf])
-AC_CHECK_FUNCS([strdup strnlen memchr strerror setrlimit strchr])
+AC_CHECK_FUNCS([_strupr strdup strnlen strerror setrlimit strchr])
 case "$host" in
  *-*-aix[[4-9]]*)
     # XXX only verified thru AIX6.

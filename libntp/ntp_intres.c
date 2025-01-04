@@ -1144,5 +1144,5 @@ should_retry_dns(
 }
 
 #else	/* !WORKER follows */
-int ntp_intres_nonempty_compilation_unit;
+NONEMPTY_TRANSLATION_UNIT
 #endif

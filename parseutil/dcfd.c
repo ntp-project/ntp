@@ -120,6 +120,7 @@
 #define PRINTF if (interactive) printf
 #define LPRINTF if (interactive && loop_filter_debug) printf
 
+#undef DPRINTF
 #ifdef DEBUG
 #define DPRINTF(_x_) LPRINTF _x_
 #else

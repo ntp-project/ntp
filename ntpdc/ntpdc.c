@@ -948,19 +948,19 @@ sendrequest(
 		/*
 		 * Only ntpd which expects REQ_LEN_NOMAC plus maclen
 		 * octets in an authenticated request using a 16 octet
-		 * digest (that is, a newer ntpd) will handle digests
-		 * larger than 16 octets, so for longer digests, do
-		 * not attempt to shorten the requests for downlevel
-		 * ntpd compatibility.
+		 * digest (that is, a newer ntpd) will handle 20 octet
+		 * digests, so for longer digests, do not attempt to
+		 * shorten the requests for downlevel compatibility.
 		 */
 		if (REQ_LEN_NOMAC != req_pkt_size)
 			return 1;
 		reqsize = REQ_LEN_HDR + datasize + sizeof(*ptstamp);
 		/* align to 32 bits */
 		reqsize = (reqsize + 3) & ~3;
-	} else
+	} else {
 		reqsize = req_pkt_size;
-	ptstamp = (void *)((char *)&qpkt + reqsize - sizeof *ptstamp);
+	}
+	ptstamp = (void *)((char *)&qpkt + reqsize - sizeof(*ptstamp));
 	get_systime(&ts);
 	L_ADD(&ts, &delay_time);
 	HTONL_FP(&ts, ptstamp);
@@ -968,11 +968,11 @@ sendrequest(
 	if (!maclen) {  
 		fprintf(stderr, "Key not found\n");
 		return 1;
-	} else if (maclen != (size_t)(info_auth_hashlen + sizeof(keyid_t))) {
+	} else if (maclen != info_auth_hashlen + sizeof(keyid_t)) {
 		fprintf(stderr,
-			"%zu octet MAC, %zu expected with %zu octet digest\n",
-			maclen, (info_auth_hashlen + sizeof(keyid_t)),
-			info_auth_hashlen);
+			"%u octet MAC, %u expected with %u octet digest\n",
+			(u_int)maclen, (u_int)(sizeof(keyid_t) + info_auth_hashlen),
+			(u_int)info_auth_hashlen);
 		return 1;
 	}
 	return sendpkt(&qpkt, reqsize + maclen);
@@ -1764,10 +1764,10 @@ keytype(
 	size_t		digest_len;
 	int		key_type;
 
-	if (!pcmd->nargs) {
-		fprintf(fp, "keytype is %s with %lu octet digests\n",
+	if (0 == pcmd->nargs) {
+		fprintf(fp, "keytype is %s, using %lu bit digests\n",
 			keytype_name(info_auth_keytype),
-			(u_long)info_auth_hashlen);
+			8u * (u_long)info_auth_hashlen);
 		return;
 	}
 
@@ -1775,18 +1775,18 @@ keytype(
 	digest_len = 0;
 	key_type = keytype_from_text(digest_name, &digest_len);
 
-	if (!key_type) {
-		fprintf(fp, "keytype must be 'md5'%s\n",
+	if (0 == key_type) {
 #ifdef OPENSSL
-			" or a digest type provided by OpenSSL");
+		fprintf(fp, "keytype must be a digest algorithm provided by OpenSSL\n");
 #else
-			"");
+		fprintf(fp, "keytype must be 'md5'\n");
 #endif
 		return;
 	}
 
 	info_auth_keytype = key_type;
-	info_auth_hashlen = digest_len;
+	/* We use only the first 20 octets of longer digests */
+	info_auth_hashlen = min(MAX_MDG_LEN, digest_len);
 }
 
 
