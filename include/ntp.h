@@ -567,12 +567,12 @@ struct pkt {
 #define	SHAKE128_LENGTH	16
 #define	CMAC_LENGTH	16
 #define	SHA1_LENGTH	20
-#define	KEY_MAC_LEN	sizeof(u_int32)		/* key ID in MAC */
+#define	KEY_MAC_LEN	(sizeof(u_int32))	/* key ID in MAC */
 #define	MAX_MD5_LEN	(KEY_MAC_LEN + MD5_LENGTH)
 #define	MAX_SHAKE128_LEN (KEY_MAC_LEN + SHAKE128_LENGTH)
 #define	MAX_SHA1_LEN	(KEY_MAC_LEN + SHA1_LENGTH)
 #define	MAX_MAC_LEN	(6 * sizeof(u_int32))	/* any MAC */
-#define	MAX_MDG_LEN	(MAX_MAC_LEN-KEY_MAC_LEN) /* max. digest len */
+#define	MAX_MDG_LEN	(MAX_MAC_LEN - KEY_MAC_LEN) /* max digest len */
 
 	/*
 	 * The length of the packet less MAC must be a multiple of 64

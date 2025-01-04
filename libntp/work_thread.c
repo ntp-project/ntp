@@ -947,5 +947,5 @@ cleanup_after_child(
 
 
 #else	/* !WORK_THREAD follows */
-char work_thread_nonempty_compilation_unit;
+NONEMPTY_TRANSLATION_UNIT
 #endif

@@ -613,5 +613,5 @@ void worker_global_lock(int inOrOut)
 }
 
 #else	/* !WORK_FORK follows */
-char work_fork_nonempty_compilation_unit;
+NONEMPTY_TRANSLATION_UNIT
 #endif

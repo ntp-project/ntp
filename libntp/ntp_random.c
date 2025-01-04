@@ -469,7 +469,7 @@ ntp_setstate(
  *
  * Returns a 31-bit random number.
  */
-long
+int32
 ntp_random( void )
 {
 	register long i;
@@ -495,7 +495,7 @@ ntp_random( void )
 
 		fptr = f; rptr = r;
 	}
-	return(i);
+	return (int32)i;
 }
 
 /*

@@ -221,13 +221,12 @@ extern	int	errno;
 extern	int	h_errno;
 #endif
 
-#ifndef HAVE_MEMCHR
-extern void *memchr(const void *s, int c, size_t n);
-#endif
-
 #ifndef HAVE_STRNLEN
 extern size_t strnlen(const char *s, size_t n);
 #endif
 
+#ifndef HAVE__STRUPR
+extern char *_strupr(char *s);
+#endif
 
 #endif	/* L_STDLIB_H */
