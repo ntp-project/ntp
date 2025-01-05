@@ -2,7 +2,8 @@
 
 LOGF=make.log
 IAM=`hostname || uname -n`
-MYNAME=`IFS=. ; set $IAM ; echo $1`
+MYNAME=`echo $IAM | cut -d. -f1`
+MYNAME2=`echo $IAM | cut -d. -f1-2`
 SIG=
 
 case "$1" in
@@ -10,7 +11,7 @@ case "$1" in
     SIG=$1
     shift
     CONFIG_ARGS="$@"
-    KEY=`sed -e q < .buildkey-$MYNAME`
+    KEY=`sed -e q < .buildkey-$IAM`
     case "$SIG" in
      $KEY) ;;
      *)
@@ -52,8 +53,11 @@ esac
 case "$NTP_BDIR" in
  '')
     case "$IAM" in
-     *.ntp.org | *.ntfo.org)
+     *.ntp.org)
 	NTP_BDIR=host
+	;;
+     *.ntfo.org)
+	NTP_BDIR=host2
 	;;
      *.udel.edu)
 	NTP_BDIR=host
@@ -75,6 +79,9 @@ esac
 case "$NTP_BDIR" in
  host) 
     BASEDIR=A.$MYNAME
+    ;;
+ host2) 
+    BASEDIR=A.$MYNAME2
     ;;
  cvo)
     BASEDIR=A.$CVO

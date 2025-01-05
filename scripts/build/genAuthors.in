@@ -1,10 +1,16 @@
-#! @PATH_PERL@
+#! /bin/sh
 # @configure_input@
 
 # DESCRIPTION
 #
-# Make sure we have the list of authors for git imports.
+# Generate an authors.txt file.  If the generated file is different
+# from any existing copy, install it.
 # Call with the path to the Authors/ subdirectory.
+# - Why?  We know where it has to live...
+# We might want either the path to checkAuthors or insist that
+# checkAuthors is in the PATH (which is kinda horrible).
+# Remember that genAuthors and checkAuthors are generated scripts
+# that are not installed, so they're in the build tree.
 #
 # AUTHOR
 #
@@ -12,74 +18,70 @@
 #
 # LICENSE
 #
-#  This file is Copyright (c) 2016 Network Time Foundation
+#  This file is Copyright (c) 2024 Network Time Foundation
 #
 #  Copying and distribution of this file, with or without modification, are
 #  permitted in any medium without royalty provided the copyright notice,
 #  author attribution and this notice are preserved.  This file is offered
 #  as-is, without any warranty.
 
-use strict;
-use warnings;
+CA="@abs_builddir@/checkAuthors"
 
-# Read in the list of known authors.
-# run:
-#  bk changes -and:USER: | sort -u
-# to get the list of users who have made commits.
-# Make sure that each of these users is in the set of known authors.
-# Make sure the format of that file is 1 or more lines of the form:
-#  user = User Name <user@place>
-#
-# If all of the above is true, exit 0.
-# If there are any problems, squawk and exit 1. 
+case "$#" in
+ 0) ;;
+ *) echo "Usage: $0"
+    exit 1
+    ;;
+esac
 
-my $bk_u = "bk changes -and:USER: | sort -u |";
-chomp(my $bk_root = `bk root`);
-my $A_dir = "$bk_root/BitKeeper/etc/Authors";
-my $A_file = "$bk_root/BitKeeper/etc/authors.txt";
-my %authors;
-my $problem = 0;
+echo "CA is <$CA>"
 
-die "bkroot: <$bk_root>, A_dir: <$A_dir>\n" if (! -r $A_dir);
-die "bkroot: <$bk_root>, A_file: <$A_file>\n" if (! -r $A_file);
+if ! test -x $CA
+then
+    echo "$CA does not point to an executable checkAuthors script!"
+    echo "Usage: $0 path/to/checkAuthors"
+    exit 1
+fi
 
-# Process the authors.txt file
-open(my $FILE, '<', $A_file) or die "Could not open <$A_file>: $!\n";
-while (<$FILE>) {
-  chomp;
-  if (/^([\S]+) = ([\V]+) <([\w.-]+\@[\w.-]+)>$/) {
-    # print "Got '$1 = $2 <$3>'\n";
-    $authors{$1} = "";
-  } else {
-    print "In $A_file: unrecognized line: '$_'\n";
-    $problem = 1;
-  }
-}
-close($FILE);
+set -e
+set -x
 
-#print "\%authors = ", join(' ', sort keys %authors), "\n";
+# If we don't have bk, just exit.
 
-die "Fix the problem(s) noted above!\n" if $problem;
+bk version > /dev/null 2>&1 || exit 0
 
-# Process "bk changes ..."
+# Make sure we're in the correct directory
+# We might not need to 'cd' at all, and we can expect
+# authors.txt to live in $1/../authors.txt.
+# But we still might want to CD there so we can 'bk get'.
 
-open(BKU, $bk_u) || die "$0: <$bk_u> failed: $!\n";
-while (<BKU>) {
-  chomp;
-  my $Name = $_;
-  my $name = lc;
-  # print "Got Name <$Name>, name <$name>\n";
-  if (!defined($authors{$Name})) {
-    $problem = 1;
-    print "<$Name> is not a defined author!\n";
-    open(my $FILE, '>>', "$A_dir/$name.txt") || die "Cannot create '$A_dir/$name.txt': $!\n";
-    print $FILE "$Name = \n";
-    close($FILE);
-  }
-}
+cd `bk root`/BitKeeper/etc
 
-die "Fix the problem(s) noted above!\n" if $problem;
+# Note the following will likely be checked out read-only
+bk get -q Authors || true
+bk get -q authors.txt || true
 
-# Local Variables:	**
-# mode:cperl		**
-# End:			**
+cat Authors/*.txt > authors.txt+
+
+if ! $CA authors.txt+ Authors
+then
+    echo "Fix the described errors and try again."
+    exit 1
+fi
+    
+if ! cmp -s authors.txt authors.txt+
+then
+    if bk pending -q
+    then
+	bk edit authors.txt
+	mv -f authors.txt authors.txt-
+	mv authors.txt+ authors.txt
+	bk ci -y'Updated authors.txt' authors.txt
+	bk commit -y'Updated authors.txt'
+    else
+	echo "An updated authors.txt is ready to check in but there are pending commits!"
+	echo "Commit all pending changes before updating the authors.txt file!"
+	exit 1
+else
+    rm -f authors.txt+
+fi

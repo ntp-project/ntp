@@ -1,5 +1,6 @@
 ---
-
+* [Bug 3960] Remove duplicate ntp.conf.def content, reported by
+             Ulrich Windl. <stenn@ntp.org>
 * [Bug 3932] Ignore teredo interfaces in Windows ntpd. <hart@ntp.org>
 * [Bug 3931] Libopts is not respecting VPATH. <hart@ntp.org>
 * [Bug 3930] Windows build mkver.bat races itself. <hart@ntp.org>
@@ -14,6 +15,15 @@
              <hart@ntp.org>
 * [Bug 3877] 4.2.8p16 client rejects server response with zero ppoll.
              <hart@ntp.org>
+* Makefile.am: Another tweak to check-local.  <stenn@ntp.org>
+* cleanup github-specific files.  <stenn@ntp.org>
+* Add COPYRIGHT.md and LICENSE.md.  <stenn@ntp.org>
+* Makefile.am: Fix distcheck problem with check-local.  <stenn@ntp.org>
+* Add .github to the top-level tree. <dlavigne@nwtime.org>
+* build script: Use hostname.site for NTF build hosts.  Use the full
+  hostname for the buildkey.  <stenn@ntp.org>
+* flock-build: Try to use the full hostname for the buildkey.  <stenn@ntp.org>
+* Author attribution updates
 * Display SSL shared library version number in human form. <hart@ntp.org>          
 
 ---

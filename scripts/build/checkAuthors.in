@@ -1,0 +1,191 @@
+#! @SHELL@
+#! -*-perl-*-
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+    if 0;
+
+# DESCRIPTION
+#
+# Make sure we have the complete list of authors for git imports.
+#
+# INVOCATION
+#  checkAuthors [-v] path/to/authors.txt path/to/Authors/
+#  from somewhere under the repo's BK root
+#
+# AUTHOR
+#
+#  Harlan Stenn
+#
+# LICENSE
+#
+#  This file is Copyright (c) 2016,2020 Network Time Foundation
+#
+#  Copying and distribution of this file, with or without modification, are
+#  permitted in any medium without royalty provided the copyright notice,
+#  author attribution and this notice are preserved.  This file is offered
+#  as-is, without any warranty.
+
+use strict;
+use warnings;
+
+# Read in the set of known authors from the Authors/ subdir.
+# Validate what we can.
+# Make sure the format of that file is 1 or more lines of the form:
+#  user = User Name <user@place>
+#
+# Read in authors.txt.  Validate what we can.
+#
+# Read in the list of authors from the changesets..
+# run:
+#  bk changes -and:USER: | sort -u
+# to get the list of users who have made commits.
+# Make sure that each of these users is in the set of known authors.
+#
+# If all of the above is true, exit 0.
+# If there are any problems, squawk and exit 1. 
+
+my $bk_u = "bk changes -and:USER: | sort -u |";
+chomp(my $bk_root = `bk root`);
+my %authors;
+my %where;
+my $problem;
+my $verbose = 0;
+
+if (0 <= $#ARGV && "-v" eq $ARGV[0]) {
+  $verbose = 1;
+  shift @ARGV;
+}
+
+die "$0: usage: $0 [-v] authors.txt Authors/\n" unless 1 == $#ARGV;
+
+my $A_file = shift @ARGV;
+my $A_path = shift @ARGV;
+
+$problem = 0;
+
+if (! -r $A_file) {
+  my @args = ("bk", "get", "-q", $A_file);
+  unless (system(@args) == 0) {
+    warn "system @args failed: $?";
+    ++$problem;
+  }
+}
+
+{
+  my @args = ("bk", "get", "-q", $A_path);
+  unless (system(@args) == 0) {
+    warn "system @args failed: $?";
+    ++$problem;
+  }
+}
+
+die "bkroot: <$bk_root>, Fix above problems!\n" if ($problem != 0);
+
+
+# print "Validating '$A_path/*.txt'\n" if ($verbose);
+
+foreach my $fp (glob("$A_path/*.txt")) {
+  printf "%s\n", $fp if $verbose;
+  my $lines = 0;
+  open my $fh, "<", $fp or die "can't open '$fp': $!";
+  while (<$fh>) {
+    ++$lines;
+    chomp;
+    print "$fp: <$_>\n" if $verbose;
+    print "$fp contains multiple data lines.\n" if ($lines > 1);
+    # \V is "not vertical whitespace", so that might be a bit loose.
+    if (/^([\S]+) = ([\V]+) <([\w.-]+\@[\w.-]+)>$/) {
+      # print "Got '$1 = $2 <$3>'\n";
+      # We should have a way to make sure the name ($1) is defined
+      # in exactly one place.
+      $authors{$1} = "$2 <$3>";
+      if (defined $where{$1}) {
+	if ($where{$1} ne $fp) {
+	  $problem = 1;
+	  print "User <$1> is specified in both $fp and in $where{$1}!\n";
+	} else {
+	  # The new name is in the same file.
+	}
+      } else {
+        $where{$1} = $fp;
+      }
+      # print "authors{$1} = $authors{$1}\n";
+      # print "where{$1}   = $where{$1}\n";
+
+      my $user = $1;
+      my $fu;
+      my $x;
+      ## Make sure $fp matches $1.txt:
+      #if ($fp =~ m!/([\w\.-]+)\.txt!) {
+      # # print "Got <$1>!\n";
+      # $fu = $1;
+      #} else {
+      #  print "<$fp> could not be parsed into USER.txt!\n";
+      #}
+      #if (lc($fu) ne lc($user)) {
+      #  $problem = 1;
+      #  print "In $fp, the username $user does not match the filename\n";
+      #}
+    } else {
+      print "In $fp: unrecognized line: '$_'\n";
+      $problem = 1;
+    }
+  }
+  close $fh or die "can't close '$fp': $!";
+  # print "\n";
+}
+
+die "Fix the problem(s) noted above!\n" if $problem;
+
+# Process the authors.txt file
+# print "Validating '$A_file'\n" if ($verbose);
+
+open(my $FILE, '<', $A_file) or die "Could not open <$A_file>: $!\n";
+while (<$FILE>) {
+  chomp;
+  if (/^([\S]+) = ([\V]+) <([\w.-]+\@[\w.-]+)>$/) {
+    # print "Got '$1 = $2 <$3>'\n";
+    if (defined($authors{$1})) {
+      # print "'authors{$1} = $authors{$1}' found\n";
+    } else {
+      print "authors.txt contains '$_' but <$1> is not in the authors hash!\n";
+    }
+  } else {
+    print "In $A_file: unrecognized line: '$_'\n";
+    $problem = 1;
+  }
+}
+close($FILE);
+
+##
+# print "\%authors = ", join(' ', sort keys %authors), "\n";
+
+die "Fix the problem(s) in $A_file noted above!\n" if $problem;
+
+# Process "bk changes ..."
+$problem = 0;
+
+open(BKU, $bk_u) || die "$0: <$bk_u> failed: $!\n";
+while (<BKU>) {
+  chomp;
+  my $Name = $_;
+  my $name = lc;
+  # print "Got Name <$Name>, name <$name>\n";
+  if (!defined($authors{$Name})) {
+    $problem = 1;
+    if (-e "$A_path/$Name.txt") {
+      print "Authors/$Name.txt exists but $Name is not a defined author!\n";
+    } else {
+      print "$Name is not a defined author and No Authors/$Name.txt file exists!\n";
+      open(my $FILE, '>>', "$A_path/$name.txt") || die "Cannot create '$A_path/$name.txt': $!\n";
+      print $FILE "$Name = FILL-IN-NAME-AND-EMAIL\n";
+      close($FILE);
+    }
+  }
+  print "$Name = $authors{$Name}\n" if ($verbose);
+}
+
+die "Fix the problem(s) noted above!\n" if $problem;
+
+# Local Variables:	**
+# mode:cperl		**
+# End:			**

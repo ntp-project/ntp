@@ -10,11 +10,11 @@
 .ds B-Font B
 .ds I-Font I
 .ds R-Font R
-.TH ntp.conf 5man "25 May 2024" "4.2.8p18" "File Formats"
+.TH ntp.conf 5man "18 Dec 2024" "4.2.8p18" "File Formats"
 .\"
 .\" EDIT THIS FILE WITH CAUTION (in-mem file)
 .\"
-.\" It has been AutoGen-ed May 25, 2024 at 12:04:03 AM by AutoGen 5.18.16
+.\" It has been AutoGen-ed December 18, 2024 at 02:16:44 PM by AutoGen 5.18.16
 .\" From the definitions ntp.conf.def
 .\" and the template file agman-cmd.tpl
 .SH NAME
@@ -3344,14 +3344,6 @@ message is sent with a source address of the local interface the
 message is sent through.
 Note that on a multihomed host the
 interface used may vary from time to time with routing changes.
-.TP 7
-.NOP \f\*[B-Font]ttl\f[] \f\*[I-Font]hop\f[] \f\*[I-Font]...\f[]
-This command specifies a list of TTL values in increasing order.
-Up to 8 values can be specified.
-In
-\f\*[B-Font]manycast\f[]
-mode these values are used in-turn in an expanding-ring search.
-The default is eight multiples of 32 starting at 31.
 .sp \n(Ppu
 .ne 2
 
@@ -3362,7 +3354,7 @@ programs may also request their own trap dynamically, configuring a
 trap receiver will ensure that no messages are lost when the server
 is started.
 .TP 7
-.NOP \f\*[B-Font]hop\f[] \f\*[I-Font]...\f[]
+.NOP \f\*[B-Font]ttl\f[] \f\*[I-Font]hop\f[] \f\*[I-Font]...\f[]
 This command specifies a list of TTL values in increasing order, up to 8
 values can be specified.
 In manycast mode these values are used in turn in
