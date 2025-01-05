@@ -81,12 +81,7 @@ compute_mac(
 			goto mac_fail;
 		}
 #ifdef OPENSSL	/* OpenSSL 1 supports return codes 0 fail, 1 okay */
-#	    ifdef EVP_MD_CTX_FLAG_NON_FIPS_ALLOW
-		EVP_MD_CTX_set_flags(ctx, EVP_MD_CTX_FLAG_NON_FIPS_ALLOW);
-#	    endif
-		/* [Bug 3457] DON'T use plain EVP_DigestInit! It would
-		 *  kill the flags! */
-		if (!EVP_DigestInit_ex(ctx, EVP_get_digestbynid(key_type), NULL)) {
+		if (!EVP_DigestInit(ctx, EVP_get_digestbynid(key_type))) {
 			msyslog(LOG_ERR, "make_mac: MAC %s Digest Init failed.",
 				macname);
 			goto mac_fail;
@@ -107,9 +102,10 @@ compute_mac(
 			len = 0;
 		}
 #else /* !OPENSSL */
-		(void)key_type; /* unused, so try to prevent compiler from croaks */
+		UNUSED_LOCAL(key_type);
+
 		if (!EVP_DigestInit(ctx, EVP_get_digestbynid(key_type))) {
-			msyslog(LOG_ERR, "make_mac: MAC MD5 Digest Init failed.");
+			msyslog(LOG_ERR, "make_mac: MAC Digest Init failed.");
 			goto mac_fail;
 		}
 		EVP_DigestUpdate(ctx, key_data, key_size);

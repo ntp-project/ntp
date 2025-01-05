@@ -4,6 +4,10 @@
 * [Bug 3932] Ignore teredo interfaces in Windows ntpd. <hart@ntp.org>
 * [Bug 3931] Libopts is not respecting VPATH. <hart@ntp.org>
 * [Bug 3930] Windows build mkver.bat races itself. <hart@ntp.org>
+* [Bug 3928] ntpd 4.2.8p18 crash when bringing up net interface fails.
+             <hart@ntp.org>
+* [Bug 3929] 4.2.8p18 -Werror -Wincompatible-pointer-types breaks w/md5.h.
+             Wrap MD5Update() calls for varying declarations.  <hart@ntp.org>
 * [Bug 3927] 4.2.8p18 configure reverses -L and -l in $LIBS for OpenSSL test.
              Reported by Brian Utterback. <hart@ntp.org>
 * [Bug 3926] pthread_detach() not detected with gcc 14, clang 16.
