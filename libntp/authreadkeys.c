@@ -240,7 +240,7 @@ authreadkeys(
 				  keyno);
 			keytype = 0;
 		} else {
-			keytype = KEY_TYPE_MD5;
+			keytype = NID_md5;
 		}
 #endif	/* !OPENSSL */
 

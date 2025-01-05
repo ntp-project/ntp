@@ -3663,18 +3663,18 @@ static u_int32 derive_nonce(
 		last_salt_update = current_time;
 	}
 
-	MD5Init(&ctx);
-	MD5Update(&ctx, salt, sizeof(salt));
-	MD5Update(&ctx, &ts_i, sizeof(ts_i));
-	MD5Update(&ctx, &ts_f, sizeof(ts_f));
+	ntp_md5_init(&ctx);
+	ntp_md5_update(&ctx, salt, sizeof(salt));
+	ntp_md5_update(&ctx, &ts_i, sizeof(ts_i));
+	ntp_md5_update(&ctx, &ts_f, sizeof(ts_f));
 	if (IS_IPV4(addr)) {
-		MD5Update(&ctx, &SOCK_ADDR4(addr), sizeof(SOCK_ADDR4(addr)));
+		ntp_md5_update(&ctx, &SOCK_ADDR4(addr), sizeof(SOCK_ADDR4(addr)));
 	} else {
-		MD5Update(&ctx, &SOCK_ADDR6(addr), sizeof(SOCK_ADDR6(addr)));
+		ntp_md5_update(&ctx, &SOCK_ADDR6(addr), sizeof(SOCK_ADDR6(addr)));
 	}
-	MD5Update(&ctx, &NSRCPORT(addr), sizeof(NSRCPORT(addr)));
-	MD5Update(&ctx, salt, sizeof(salt));
-	MD5Final(d.digest, &ctx);
+	ntp_md5_update(&ctx, &NSRCPORT(addr), sizeof(NSRCPORT(addr)));
+	ntp_md5_update(&ctx, salt, sizeof(salt));
+	ntp_md5_final(d.digest, &ctx);
 
 	return d.extract;
 }

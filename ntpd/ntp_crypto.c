@@ -150,7 +150,7 @@ static int calcomp(struct calendar *pjd1, struct calendar *pjd2)
  * Global cryptodata in host byte order
  */
 u_int32	crypto_flags = 0x0;	/* status word */
-int	crypto_nid = KEY_TYPE_MD5; /* digest nid */
+int	crypto_nid = NID_md5; /* digest nid */
 char	*sys_hostname = NULL;
 char	*sys_groupname = NULL;
 static char *host_filename = NULL;	/* host file name */

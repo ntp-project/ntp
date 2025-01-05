@@ -55,7 +55,7 @@ tearDown(void)
 }
 
 
-static const int KEYTYPE = KEY_TYPE_MD5;
+static const int KEYTYPE = NID_md5;
 static char      msgbuf[128];
 
 void

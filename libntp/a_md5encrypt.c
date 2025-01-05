@@ -56,7 +56,7 @@ get_md_ctx(
 	static MD5_CTX	md5_ctx;
 
 	DEBUG_INSIST(NID_md5 == nid);
-	MD5Init(&md5_ctx);
+	ntp_md5_init(&md5_ctx);
 
 	return &md5_ctx;
 #else
@@ -171,10 +171,10 @@ make_mac(
 		if (digest->len < MD5_LENGTH) {
 			msyslog(LOG_ERR, "%s", "MAC encrypt: MAC md5 buf too small.");
 		} else {
-			MD5Init(ctx);
-			MD5Update(ctx, (const void *)key->buf, key->len);
-			MD5Update(ctx, (const void *)msg->buf, msg->len);
-			MD5Final(digest->buf, ctx);
+			ntp_md5_init(ctx);
+			ntp_md5_update(ctx, key->buf, key->len);
+			ntp_md5_update(ctx, msg->buf, msg->len);
+			ntp_md5_final(digest->buf, ctx);
 			retlen = MD5_LENGTH;
 		}
 	} else {
@@ -279,9 +279,9 @@ addr2refid(sockaddr_u *addr)
 		return (NSRCADR(addr));
 	}
 	/* MD5 is not used for authentication here. */
-	MD5Init(&md5_ctx);
-	MD5Update(&md5_ctx, (void *)&SOCK_ADDR6(addr), sizeof(SOCK_ADDR6(addr)));
-	MD5Final(u.digest, &md5_ctx);
+	ntp_md5_init(&md5_ctx);
+	ntp_md5_update(&md5_ctx, &SOCK_ADDR6(addr), sizeof(SOCK_ADDR6(addr)));
+	ntp_md5_final(u.digest, &md5_ctx);
 #ifdef WORDS_BIGENDIAN
 	u.addr_refid = BYTESWAP32(u.addr_refid);
 #endif
