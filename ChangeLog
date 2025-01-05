@@ -1,6 +1,7 @@
 ---
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
+* [Bug 3942] DECL_SYSCALL detection does not work on illumos. <hart@ntp.org>
 * [Bug 3940] Once again support symmetric auth using digests > 160 bits.
              <hart@ntp.org>
 * [Bug 3934] ntp_facilitynames.m4 is broken and unused.
