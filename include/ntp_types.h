@@ -234,25 +234,33 @@ typedef u_int32 tstamp_t;	/* NTP seconds timestamp */
  * easy to do portably, as the maximum alignment required is not
  * exposed.  Use the size of a union of the types known to represent the
  * strictest alignment on some platform.
+ * ALIGNED_SIZE() assumes sizeof(max_alignment) is a power of two.
  */
 typedef union max_alignment_tag {
-	double		d;
+	double	d;
+	long	l;
+	void *	vp;
+#ifdef HAVE_INT64
+	int64	i64;
+#endif
 } max_alignment;
 
-#define MAXALIGN		sizeof(max_alignment)
-#define ALIGN_UNITS(sz)		(((sz) + MAXALIGN - 1) / MAXALIGN)
-#define ALIGNED_SIZE(sz)	(MAXALIGN * ALIGN_UNITS(sz))
-#define INC_ALIGNED_PTR(b, m)	((void *)aligned_ptr((void *)(b), m))
+#define MAXALIGN		(sizeof(max_alignment))
+#define ALIGNMASK		(MAXALIGN - 1)
+#define ALIGNED_SIZE(sz)	(((sz) + ALIGNMASK) & ~ALIGNMASK)
+#define INCR_PTR(p, sz)		((void *)((char *)(p) + (sz)))
 
-static inline
-max_alignment *
-aligned_ptr(
-	max_alignment *	base,
-	size_t		minsize
-	)
-{
-	return base + ALIGN_UNITS((minsize < 1) ? 1 : minsize);
-}
+/*
+ * There are cases where we would get "cast increases required alignment"
+ * when in fact it doesn't, and we know it doesn't.  An example is struct
+ * addrinfo.ai_addr, which is declared as a sockaddr * but often is the
+ * more-strictly-aligned sockaddr_in6 *.  Only when it is clear the
+ * alignment requirement is not really increasing, use QUIET_ALIGN_WARN().
+ * In addition to quieting the warning, it also unfortunately defeats 
+ * compiler type checking.
+ */
+
+#define QUIET_ALIGN_WARN(p)	((void *)(p))
 
 /*
  * On Unix struct sock_timeval is equivalent to struct timeval.

@@ -1,6 +1,11 @@
 ---
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
+* [Bug 3940] Once again support symmetric auth using digests > 160 bits.
+             <hart@ntp.org>
+* [Bug 3934] ntp_facilitynames.m4 is broken and unused.
+             Fix bug in never-used configure script macro. <hart@ntp.org>
+* [Bug 3933] Restrict structure misaligned on SPARC64. <hart@ntp.org>
 * [Bug 3932] Ignore teredo interfaces in Windows ntpd. <hart@ntp.org>
 * [Bug 3931] Libopts is not respecting VPATH. <hart@ntp.org>
 * [Bug 3930] Windows build mkver.bat races itself. <hart@ntp.org>
@@ -29,6 +34,23 @@
 * flock-build: Try to use the full hostname for the buildkey.  <stenn@ntp.org>
 * Author attribution updates
 * Display SSL shared library version number in human form. <hart@ntp.org>          
+* Reorder restrict_u layout to improve alignment on all platforms.
+  <hart@ntp.org>
+* Improve ntpq's "help keytype" list of available digests twice.
+  1. Test each digest rather than assuming that if OpenSSL enumerates it, it
+     will work.  This deals with both deprecation and policy-based exclusion,
+     such as FIPS-hardened OpenSSL.
+  2. Include digests which produce more than 160 bits. <hart@ntp.org>
+* Add beefier digests algorithms to tests/libntp/digests.c, and rearrange
+  to pass if at least 1/3 of tested digests work.  Previously every
+  digest attempted had to work for "make check" success. <hart@ntp.org>
+* Report clk_jitter (variability in offsets) in nanoseconds for mode 6 
+  readvar ("ntpq -crv"). <hart@ntp.org>
+* Correct match_restrict[46]_addr() logic expiring temporary restrictions.
+  <hart@ntp.org>
+* Rename is_ip_address() to sau_from_string() to better reflect use.
+  <hart@ntp.org>
+* Remove include/safecast.h <hart@ntp.org>
 
 ---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>

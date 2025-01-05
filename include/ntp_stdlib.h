@@ -111,10 +111,10 @@ extern	int	ymd2yd		(int, int, int);
 
 /* a_md5encrypt.c */
 extern	size_t	MD5authencrypt	(int type, const u_char *key, size_t klen,
-				 u_int32 *pkt, size_t length);
-extern	int	MD5authdecrypt	(int type, const u_char *key, size_t klen,
-				 u_int32 *pkt, size_t length, size_t size,
-				 keyid_t keyno);
+				 u_int32 *pkt, size_t input_size);
+extern	bool	MD5authdecrypt	(int type, const u_char *key, size_t klen,
+				 u_int32 *pkt, size_t length,
+				 size_t mac_size, keyid_t keyno);
 extern	u_int32	addr2refid	(sockaddr_u *);
 
 /* authkeys.c */
@@ -168,7 +168,7 @@ extern	int	atouint		(const char *, u_long *);
 extern	int	hextoint	(const char *, u_long *);
 extern	const char *	humanlogtime	(void);
 extern	const char *	humantime	(time_t);
-extern int	is_ip_address	(const char *, u_short, sockaddr_u *);
+extern int	sau_from_string	(const char *, u_short, sockaddr_u *);
 extern	char *	mfptoa		(u_int32, u_int32, short);
 extern	char *	mfptoms		(u_int32, u_int32, short);
 extern	const char * modetoa	(size_t);
@@ -206,6 +206,9 @@ extern	void	rereadkeys	(void);
 /*
  * Variable declarations for libntp.
  */
+
+/* a_md5encrypt.c */
+extern bool	suppress_digest_errors;	/* for digest_alg_works() */
 
 /* authkeys.c */
 extern u_long	authkeynotfound;	/* keys not found */

@@ -22,6 +22,7 @@ extern const char srcdir[];
 u_long			current_time;
 
 static bool		setup;
+static u_int		digests_attempted, digests_worked; 
 static u_int32 *	pkt;
 static size_t		pkt_sz;
 static u_char *		mac;
@@ -54,7 +55,7 @@ setUp(void)
 	done_once = TRUE;
 
 	init_auth();
-
+ 
 	snprintf(keys_fname, sizeof(keys_fname), "%s/%s", srcdir,
 		 keys_rel_fname);
 	if (! authreadkeys(keys_fname)) {
@@ -97,29 +98,61 @@ setUp(void)
 	setup = TRUE;
 }
 
-/* reduce code duplication with an ugly macro */
-#define TEST_ONE_DIGEST(key, exp_sz, exp_mac)				\
-do {									\
-	size_t res_sz;							\
-									\
-	zero_mem(mac, MAX_MAC_LEN);					\
-	if (!auth_findkey(key)) {					\
-		TEST_IGNORE_MESSAGE("MAC unsupported on this system");	\
-		return;							\
-	}								\
-	authtrust((key), 1);						\
-									\
-	res_sz = authencrypt((key), pkt, pkt_sz);			\
-	if (0 == res_sz) {						\
-		TEST_IGNORE_MESSAGE("Likely OpenSSL 3 failed digest "	\
-				    "init.");				\
-		return;							\
-	}								\
-	TEST_ASSERT_EQUAL_UINT((u_int)((exp_sz) + KEY_MAC_LEN), res_sz);\
-	dump_mac((key), mac, res_sz);					\
-	TEST_ASSERT_EQUAL_HEX8_ARRAY((exp_mac), mac, MAX_MAC_LEN);	\
+
+/* reduce code duplication with some ugly macros */
+#define TEST_ONE_DIGEST(must_pass, key, exp_sz, exp_mac)			\
+do {										\
+	size_t	res_sz;								\
+	char	msg[120];							\
+										\
+	zero_mem(mac, MAX_MAC_LEN);						\
+	if (!auth_findkey(key)) {						\
+		if (must_pass) {						\
+			snprintf(msg, sizeof(msg),				\
+				 "Unable to find key %u for must-pass digest",	\
+				 (key));					\
+			TEST_FAIL_MESSAGE(msg);					\
+		} else {							\
+			TEST_IGNORE_MESSAGE("MAC unsupported by host");		\
+		}								\
+		return;	/* unreachable but clarifying... */			\
+	}									\
+	authtrust((key), TRUE);							\
+										\
+	res_sz = authencrypt((key), pkt, pkt_sz);				\
+	digests_attempted++;							\
+	if (0 == res_sz) {							\
+		if (must_pass) {						\
+			snprintf(msg, sizeof(msg),				\
+				 "Key %u must-pass digest failed", (key));	\
+			TEST_FAIL_MESSAGE(msg);					\
+		} else {							\
+			TEST_IGNORE_MESSAGE("MAC may be unsupported by host");	\
+		}								\
+		return;	/* ...as TEST_IGNORE & TEST_FAIL longjmp() */		\
+	}									\
+	TEST_ASSERT_EQUAL_UINT((u_int)((exp_sz) + KEY_MAC_LEN), res_sz);	\
+	dump_mac((key), mac, res_sz);						\
+	TEST_ASSERT_EQUAL_HEX8_ARRAY((exp_mac), mac, MAX_MAC_LEN);		\
+	digests_worked++;							\
 } while (FALSE)
 
+#define TEST_DIGEST_PAIR_INTERNAL(must_pass, exp_sz, id_A, exp_A, id_B, exp_B)	\
+do {										\
+	TEST_ASSERT(setup);							\
+	TEST_ONE_DIGEST(must_pass, (id_A), (exp_sz), (exp_A));			\
+	TEST_ONE_DIGEST(must_pass, (id_B), (exp_sz), (exp_B));			\
+} while (FALSE);
+
+#define TEST_DIGEST_PAIR_MUSTPASS(exp_sz, id_A, exp_A, id_B, exp_B)		\
+	TEST_DIGEST_PAIR_INTERNAL(TRUE, (exp_sz), id_A, exp_A, id_B, exp_B)
+
+#define TEST_DIGEST_PAIR(exp_sz, id_A, exp_A, id_B, exp_B)			\
+	TEST_DIGEST_PAIR_INTERNAL(FALSE, (exp_sz), id_A, exp_A, id_B, exp_B)
+
+/*
+ * Tests of individual digest algorithms
+ */
 
 #define AES128CMAC_KEYID	1
 #undef KEYID_A
@@ -149,9 +182,7 @@ void test_Digest_AES128CMAC(void)
 			0xde, 0xe0, 0x0c, 0x84
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR_MUSTPASS(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! (OPENSSL && ENABLE_CMAC) follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL or not ENABLE_CMAC");
 #endif
@@ -186,9 +217,7 @@ void test_Digest_MD4(void)
 			0xc4, 0xf4, 0x34, 0x7e
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! OPENSSL follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
 #endif
@@ -222,9 +251,7 @@ void test_Digest_MD5(void)
 			0xb0, 0x06, 0xda, 0x34
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 }
 
 
@@ -256,9 +283,7 @@ void test_Digest_MDC2(void)
 			0xcd, 0x0e, 0x89, 0xeb
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! OPENSSL follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
 #endif
@@ -295,9 +320,7 @@ void test_Digest_RIPEMD160(void)
 			0x19, 0x60, 0x12, 0xbc
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! OPENSSL follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
 #endif
@@ -334,9 +357,7 @@ void test_Digest_SHA1(void)
 			0x86, 0x85, 0x78, 0x44
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR_MUSTPASS(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! OPENSSL follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
 #endif
@@ -371,9 +392,7 @@ void test_Digest_SHAKE128(void)
 			0xfd, 0x34, 0xca, 0x10
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR_MUSTPASS(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! OPENSSL follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
 #endif
@@ -410,9 +429,7 @@ void test_Digest_DSA(void)
 			0xfe, 0x9f, 0xf5, 0x1c
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! OPENSSL follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
 #endif
@@ -449,24 +466,22 @@ void test_Digest_DSA_SHA(void)
 			0x58, 0x1a, 0xed, 0x22
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! OPENSSL follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
 #endif
 }
 
 
-#define SHA_KEYID		10
+#define TRIPLE_DES_KEYID	10
 #undef KEYID_A
-#define KEYID_A			SHA_KEYID
+#define KEYID_A			TRIPLE_DES_KEYID
 #undef DG_SZ
 #define DG_SZ			20
 #undef KEYID_B
 #define KEYID_B			(KEYID_A + HEX_KEYID_OFFSET)
-void test_Digest_SHA(void);
-void test_Digest_SHA(void)
+void test_Digest_3DES(void);
+void test_Digest_3DES(void)
 {
 #ifdef OPENSSL
 	u_char expectedA[MAX_MAC_LEN] =
@@ -488,17 +503,141 @@ void test_Digest_SHA(void)
 			0xdd, 0x80, 0x80, 0x89
 		};
 
-	TEST_ASSERT(setup);
-	TEST_ONE_DIGEST(KEYID_A, DG_SZ, expectedA);
-	TEST_ONE_DIGEST(KEYID_B, DG_SZ, expectedB);
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
 #else	/* ! OPENSSL follows  */
 	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
 #endif
 }
 
 
+#define SHA256_KEYID		11
+#undef KEYID_A
+#define KEYID_A			SHA256_KEYID
+#undef DG_SZ
+#define DG_SZ			20
+#undef KEYID_B
+#define KEYID_B			(KEYID_A + HEX_KEYID_OFFSET)
+void test_Digest_SHA256(void);
+void test_Digest_SHA256(void)
+{
+#ifdef OPENSSL
+	u_char expectedA[MAX_MAC_LEN] =
+		{
+			0, 0, 0, KEYID_A,
+			0x3c, 0xbf, 0xff, 0xf4,
+			0x11, 0x3e, 0xb8, 0xe3,
+			0xe4, 0xc5, 0x09, 0x3c,
+			0xa1, 0x6b, 0x8c, 0x48,
+			0x21, 0x0d, 0x67, 0x1a
+		};
+	u_char expectedB[MAX_MAC_LEN] =
+		{
+			0, 0, 0, KEYID_B,
+			0x68, 0xa9, 0xd9, 0xf3,
+			0x06, 0x97, 0x80, 0x0a,
+			0xa4, 0x1d, 0x51, 0x3a,
+			0x1a, 0x41, 0x1e, 0x93,
+			0x4a, 0xb6, 0x96, 0x71
+		};
+
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
+#else	/* ! OPENSSL follows  */
+	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
+#endif
+}
+
+
+#define SHA3_256_KEYID		12
+#undef KEYID_A
+#define KEYID_A			SHA3_256_KEYID
+#undef DG_SZ
+#define DG_SZ			20
+#undef KEYID_B
+#define KEYID_B			(KEYID_A + HEX_KEYID_OFFSET)
+void test_Digest_SHA3_256(void);
+void test_Digest_SHA3_256(void)
+{
+#ifdef OPENSSL
+	u_char expectedA[MAX_MAC_LEN] =
+		{
+			0, 0, 0, KEYID_A,
+			0x2a, 0x9d, 0xcd, 0xe5,
+			0x96, 0x5d, 0x46, 0x02,
+			0x6d, 0x00, 0x53, 0x9e,
+			0x24, 0x70, 0xc2, 0x79,
+			0x52, 0xd9, 0xdf, 0xf4
+		};
+	u_char expectedB[MAX_MAC_LEN] =
+		{
+			0, 0, 0, KEYID_B,
+			0xf2, 0xae, 0xe3, 0x73,
+			0x9d, 0x65, 0xa8, 0xb7,
+			0x73, 0x65, 0xe2, 0xb8,
+			0x93, 0x3e, 0x87, 0x7d,
+			0x57, 0xa9, 0x93, 0x0e
+	};
+
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
+#else	/* ! OPENSSL follows  */
+	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
+#endif
+}
+
+
+#define SHAKE256_KEYID		13
+#undef KEYID_A
+#define KEYID_A			SHAKE256_KEYID
+#undef DG_SZ
+#define DG_SZ			20
+#undef KEYID_B
+#define KEYID_B			(KEYID_A + HEX_KEYID_OFFSET)
+void test_Digest_SHAKE256(void);
+void test_Digest_SHAKE256(void)
+{
+#ifdef OPENSSL
+	u_char expectedA[MAX_MAC_LEN] =
+		{
+			0, 0, 0, KEYID_A,
+			0xb8, 0xe9, 0x46, 0x06,
+			0xcf, 0x7d, 0x28, 0xea,
+			0xbc, 0x9f, 0x30, 0x96,
+			0xcb, 0x6e, 0x5f, 0x2d,
+			0xc8, 0x54, 0x5e, 0xdb
+		};
+	u_char expectedB[MAX_MAC_LEN] =
+		{
+			0, 0, 0, KEYID_B,
+			0x26, 0x88, 0x3c, 0x24,
+			0x06, 0xa1, 0x3f, 0x31,
+			0x0a, 0x17, 0x71, 0x13,
+			0x41, 0x46, 0xa9, 0xca,
+			0x99, 0x5d, 0xc6, 0xd6
+		};
+
+	TEST_DIGEST_PAIR(DG_SZ, KEYID_A, expectedA, KEYID_B, expectedB);
+#else	/* ! OPENSSL follows  */
+	TEST_IGNORE_MESSAGE("Skipping, no OPENSSL");
+#endif
+}
+
+
+void test_Some_Digests_Succeeded(void);
+void test_Some_Digests_Succeeded(void)
+{
+	msyslog(LOG_INFO, "%u digests usable of %u tested.",
+		          digests_worked, digests_attempted);
+	if (digests_attempted > 2) {
+		TEST_ASSERT_MESSAGE((double)digests_worked / digests_attempted > 1./3, 
+				    "Examine failing digest algorithms, "
+				    "compare with `ntpq -c \"help keytype\"` list");
+	}
+}
+
+
 /*
  * Dump a MAC in a form easy to cut and paste into the expected declaration.
+ * This is noisy in the test logs but they're generally examined only when
+ * adding another digest algorithm to the unit tests.
  */
 void dump_mac(
 	keyid_t		keyid,
@@ -506,16 +645,19 @@ void dump_mac(
 	size_t		octets
 	)
 {
-	char	dump[128];
+	char	dump[2048];
 	size_t	dc = 0;
 	size_t	idx;
 
-	dc += snprintf(dump + dc, sizeof(dump) - dc, "digest with key %u { ", keyid);
+	dc += snprintf(dump + dc, sizeof(dump) - dc,
+		       "\n\t\tkey %u expectedAB[MAX_MAC_LEN] {\n"
+		       "\t\t\t0, 0, 0, KEYID_AB,\n"
+		       "\t\t\t",
+		       keyid);
 
 	for (idx = 4; idx < octets; idx++) {
-		if (14 == idx) {
-			msyslog(LOG_DEBUG, "%s", dump);
-			dc = 0;
+		if (0 == idx % 4 && 4 < idx) {
+			dc += snprintf(dump + dc, sizeof(dump) - dc, "\n\t\t\t");
 		}
 		if (dc < sizeof(dump)) {
 			dc += snprintf(dump + dc, sizeof(dump) - dc,
@@ -523,8 +665,12 @@ void dump_mac(
 		}
 	}
 
+	/* wipe out final comma and space */
+	if (dc > 2) {
+		dc -= 2;
+	}
 	if (dc < sizeof(dump)) {
-		dc += snprintf(dump + dc, sizeof(dump) - dc, "}");
+		dc += snprintf(dump + dc, sizeof(dump) - dc, "\n\t\t};");
 	}
 
 	msyslog(LOG_DEBUG, "%s", dump);

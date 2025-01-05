@@ -40,8 +40,15 @@
 
 /*
  * We allocate INC_RESLIST{4|6} entries to the free list whenever empty.
- * Auto-tune these to be just less than 1KB (leaving at least 32 bytes
- * for allocator overhead).
+ * Auto-tune these to be just less than 1 KB (leaving at least 32 bytes
+ * for allocator overhead).  We'll use one entry for each "restrict"
+ * in ntp.conf, plus one for each local address.  This tuning gives us
+ * room for 31 IPv4 entries and 17 IPv6 entries per allocation on a
+ * 64-bit system, which is enough for the most common configurations
+ * to have all the restrictions in a a pair of 1 KB "hot zones" that will
+ * be accessed on every incoming packet of the respective address family
+ * and should stay in cache.  This is a performance optimization
+ * compared to allocating and freeing each entry as needed.
  */
 #define	INC_RESLIST4	((1024 - 32) / V4_SIZEOF_RESTRICT_U)
 #define	INC_RESLIST6	((1024 - 32) / V6_SIZEOF_RESTRICT_U)
@@ -234,9 +241,9 @@ alloc_res4(void)
 	if (res != NULL) {
 		return res;
 	}
-	rl = eallocarray(count, cb);
+	rl = eallocarray(count, cb);	/* zeroes */
 	/* link all but the first onto free list */
-	res = (void *)((char *)rl + (count - 1) * cb);
+	res = INCR_PTR(rl, (count - 1) * cb);
 	for (i = count - 1; i > 0; i--) {
 		LINK_SLIST(resfree4, res, link);
 		res = (void *)((char *)res - cb);
@@ -260,9 +267,9 @@ alloc_res6(void)
 	if (res != NULL) {
 		return res;
 	}
-	rl = eallocarray(count, cb);
+	rl = eallocarray(count, cb);	/* zeroes */
 	/* link all but the first onto free list */
-	res = (void *)((char *)rl + (count - 1) * cb);
+	res = INCR_PTR(rl, (count - 1) * cb);
 	for (i = count - 1; i > 0; i--) {
 		LINK_SLIST(resfree6, res, link);
 		res = (void *)((char *)res - cb);
@@ -336,8 +343,9 @@ match_restrict4_addr(
 
 	for (res = restrictlist4; res != NULL; res = next) {
 		next = res->link;
-		if (res->expire && res->expire <= current_time) {
+		if (res->expire > 0 && res->expire <= current_time) {
 			free_res(res, v6);	/* zeroes the contents */
+			continue;
 		}
 		if (   res->u.v4.addr == (addr & res->u.v4.mask)
 		    && (   !(RESM_NTPONLY & res->mflags)
@@ -363,8 +371,9 @@ match_restrict6_addr(
 
 	for (res = restrictlist6; res != NULL; res = next) {
 		next = res->link;
-		if (res->expire && res->expire <= current_time) {
-			free_res(res, v6);
+		if (res->expire > 0 && res->expire <= current_time) {
+			free_res(res, v6);	/* zeroes the contents */
+			continue;
 		}
 		MASK_IPV6_ADDR(&masked, addr, &res->u.v6.mask);
 		if (ADDR6_EQ(&masked, &res->u.v6.addr)
