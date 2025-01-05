@@ -1,6 +1,7 @@
 ---
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
+* [Bug 3943] 4.2.8p18 ignores link-local IPv6 server. <hart@ntp.org>
 * [Bug 3942] DECL_SYSCALL detection does not work on illumos. <hart@ntp.org>
 * [Bug 3940] Once again support symmetric auth using digests > 160 bits.
              <hart@ntp.org>
