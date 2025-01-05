@@ -3282,14 +3282,6 @@ message is sent with a source address of the local interface the
 message is sent through.
 Note that on a multihomed host the
 interface used may vary from time to time with routing changes.
-</p></dd>
-<dt><code>ttl</code> <kbd>hop</kbd> <kbd>...</kbd></dt>
-<dd><p>This command specifies a list of TTL values in increasing order.
-Up to 8 values can be specified.
-In
-<code>manycast</code>
-mode these values are used in-turn in an expanding-ring search.
-The default is eight multiples of 32 starting at 31.
 </p>
 <p>The trap receiver will generally log event messages and other
 information from the server in a log file.
@@ -3298,7 +3290,7 @@ programs may also request their own trap dynamically, configuring a
 trap receiver will ensure that no messages are lost when the server
 is started.
 </p></dd>
-<dt><code>hop</code> <kbd>...</kbd></dt>
+<dt><code>ttl</code> <kbd>hop</kbd> <kbd>...</kbd></dt>
 <dd><p>This command specifies a list of TTL values in increasing order, up to 8
 values can be specified.
 In manycast mode these values are used in turn in
