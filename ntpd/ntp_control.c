@@ -144,8 +144,8 @@ static const struct ctl_proc control_codes[] = {
 #define	CS_PEERID		9
 #define	CS_OFFSET		10
 #define	CS_DRIFT		11
-#define	CS_JITTER		12
-#define	CS_ERROR		13
+#define	CS_JITTER		12			/* sys_jitter */
+#define	CS_ERROR		13			/* clk_jitter */
 #define	CS_CLOCK		14
 #define	CS_PROCESSOR		15
 #define	CS_SYSTEM		16
@@ -956,18 +956,18 @@ save_config(
 	 * reject both types of slashes on all platforms.
 	 */
 	/* TALOS-CAN-0062: block directory traversal for VMS, too */
-	static const char * illegal_in_filename =
-#if defined(VMS)
-	    ":[]"	/* do not allow drive and path components here */
-#elif defined(SYS_WINNT)
-	    ":\\/"	/* path and drive separators */
-#else
-	    "\\/"	/* separator and critical char for POSIX */
-#endif
-	    ;
 	char reply[128];
 #ifdef SAVECONFIG
 	static const char savedconfig_eq[] = "savedconfig=";
+	static const char* illegal_in_filename =
+#if defined(VMS)
+		":[]"	/* do not allow drive and path components here */
+#elif defined(SYS_WINNT)
+		":\\/"	/* path and drive separators */
+#else
+		"\\/"	/* separator and critical char for POSIX */
+#endif
+		;
 
 	/* Build a safe open mode from the available mode flags. We want
 	 * to create a new file and write it in text mode (when
@@ -1999,12 +1999,12 @@ ctl_putsys(
 		ctl_putdbl(sys_var[CS_DRIFT].text, drift_comp * 1e6);
 		break;
 
-	case CS_JITTER:
+	case CS_JITTER:					/* sys_jitter */
 		ctl_putdbl6(sys_var[CS_JITTER].text, sys_jitter * 1e3);
 		break;
 
-	case CS_ERROR:
-		ctl_putdbl(sys_var[CS_ERROR].text, clock_jitter * 1e3);
+	case CS_ERROR:					/* clk_jitter */
+		ctl_putdbl6(sys_var[CS_ERROR].text, clock_jitter * 1e3);
 		break;
 
 	case CS_CLOCK:

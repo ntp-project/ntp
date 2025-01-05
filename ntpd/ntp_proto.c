@@ -1219,7 +1219,7 @@ receive(
 	 * Now come at this from a different perspective:
 	 * - If we expect a MAC and it's not there, we drop it.
 	 * - If we expect one keyID and get another, we drop it.
-	 * - If we have a MAC ahd it hasn't been validated yet, try.
+	 * - If we have a MAC and it hasn't been validated yet, try.
 	 * - if the provided MAC doesn't validate, we drop it.
 	 *
 	 * There might be more to this.
@@ -1274,7 +1274,7 @@ receive(
 	**
 	** Verify protocol operations consistent with the on-wire protocol.
 	** The protocol discards bogus and duplicate packets as well as
-	** minimizes disruptions doe to protocol restarts and dropped
+	** minimizes disruptions due to protocol restarts and dropped
 	** packets.  The operations are controlled by two timestamps:
 	** the transmit timestamp saved in the client state variables,
 	** and the origin timestamp in the server packet header.  The
@@ -1380,7 +1380,7 @@ receive(
 		    || rbufp->dstadr->addr_refid == pkt->refid
 #	    ifdef WORDS_BIGENDIAN	/* see local_refid() comment */
 		    || (   IS_IPV6(&rbufp->dstadr->sin)
-			&&rbufp->dstadr->old_refid ==  pkt->refid)
+			&& rbufp->dstadr->old_refid ==  pkt->refid)
 #	    endif
 								  ) {
 			DPRINTF(2, ("receive: sys leap: %0x, sys_stratum %d > hisstratum+1 %d, !sys_cohort %d && sys_stratum == hisstratum+1, loop refid %#x == pkt refid %#x\n", sys_leap, sys_stratum, hisstratum + 1, !sys_cohort, rbufp->dstadr->addr_refid, pkt->refid));
@@ -1420,8 +1420,7 @@ receive(
 			    rbufp->recv_length - MIN_V4_PKT_LEN, (u_char *)&pkt->exten);
 
 			/* Bug 3596: Do we want to fuzz the reftime? */
-			fast_xmit(rbufp, MODE_SERVER, skeyid,
-			    restrict_mask);
+			fast_xmit(rbufp, MODE_SERVER, skeyid, restrict_mask);
 		}
 		return;				/* hooray */
 
@@ -1507,13 +1506,13 @@ receive(
 		}
 
 		/*
-		 * After each ephemeral pool association is spun,
+		 * After each preemptible pool association is spun,
 		 * accelerate the next poll for the pool solicitor so
 		 * the pool will fill promptly.
 		 */
-		if (peer2->cast_flags & MDF_POOL)
+		if (MDF_POOL & peer2->cast_flags) {
 			peer2->nextdate = current_time + 1;
-
+		}
 		/*
 		 * Further processing of the solicitation response would
 		 * simply detect its origin timestamp as bogus for the
@@ -1588,14 +1587,14 @@ receive(
 		 * with the same remote address.  newpeer() will not
 		 * find duplicate associations on other local endpoints
 		 * if a non-NULL endpoint is supplied.  multicastclient
-		 * ephemeral associations are unique across all local
+		 * preemptible associations are unique across all local
 		 * endpoints.
 		 */
-		if (!(INT_MCASTOPEN & rbufp->dstadr->flags))
+		if (!(INT_MCASTOPEN & rbufp->dstadr->flags)) {
 			match_ep = rbufp->dstadr;
-		else
+		} else {
 			match_ep = NULL;
-
+		}
 		/*
 		 * Determine whether to execute the initial volley.
 		 */
@@ -1662,7 +1661,7 @@ receive(
 	 * This is the first packet received from a potential ephemeral
 	 * symmetric active peer.  First, deal with broken Windows clients.
 	 * Then, if NOEPEER is enabled, drop it.  If the packet meets our
-	 * authenticty requirements and is the first he sent, mobilize
+	 * authenticity requirements and is the first he sent, mobilize
 	 * a passive association.
 	 * Otherwise, kiss the frog.
 	 *
@@ -3567,8 +3566,8 @@ clock_select(void)
 	indx_size = ALIGNED_SIZE(nlist * 2 * sizeof(*indx));
 	octets = endpoint_size + peers_size + indx_size;
 	endpoint = erealloc(endpoint, octets);
-	peers = INC_ALIGNED_PTR(endpoint, endpoint_size);
-	indx = INC_ALIGNED_PTR(peers, peers_size);
+	peers = INCR_PTR(endpoint, endpoint_size);
+	indx = INCR_PTR(peers, peers_size);
 
 	/*
 	 * Initially, we populate the island with all the rifraff peers

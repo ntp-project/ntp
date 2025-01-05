@@ -3380,7 +3380,7 @@ config_nic_rules(
 			pchSlash = strchr(if_name, '/');
 			if (pchSlash != NULL)
 				*pchSlash = '\0';
-			if (is_ip_address(if_name, AF_UNSPEC, &addr)) {
+			if (sau_from_string(if_name, AF_UNSPEC, &addr)) {
 				match_type = MATCH_IFADDR;
 				if (pchSlash != NULL
 				    && 1 == sscanf(pchSlash + 1, "%d",
@@ -4421,8 +4421,8 @@ config_peers(
 		 * Note that if we're told to add the peer here, we
 		 * do that regardless of ippeerlimit.
 		 */
-		if (is_ip_address(*cmdline_servers, AF_UNSPEC,
-				  &peeraddr)) {
+		if (sau_from_string(*cmdline_servers, AF_UNSPEC,
+				    &peeraddr)) {
 
 			SET_PORT(&peeraddr, NTP_PORT);
 			if (is_sane_resolved_address(&peeraddr,
@@ -4497,8 +4497,9 @@ config_peers(
 		 * proceed in the mainline with it.  Otherwise, hand
 		 * the hostname off to the blocking child.
 		 */
-		} else if (is_ip_address(curr_peer->addr->address,
-				  curr_peer->addr->type, &peeraddr)) {
+		} else if (sau_from_string(curr_peer->addr->address,
+					   curr_peer->addr->type, 
+					   &peeraddr)) {
 
 			SET_PORT(&peeraddr, NTP_PORT);
 			if (is_sane_resolved_address(&peeraddr,
@@ -5610,7 +5611,7 @@ getnetnum(
 		AF_INET == AF(addr) ||
 		AF_INET6 == AF(addr));
 
-	if (!is_ip_address(num, AF(addr), addr)) {
+	if (!sau_from_string(num, AF(addr), addr)) {
 		return 0;
 	}
 # ifdef ISC_PLATFORM_HAVESALEN

@@ -1,11 +1,10 @@
 #include <config.h>
 
-#include <ntp_assert.h>
+#include <ctype.h>
 #include <string.h>
+#include "ntp_assert.h"
 #include "ntp_malloc.h"
 #include "l_stdlib.h"
-
-#define STRDUP_EMPTY_UNIT
 
 #ifndef HAVE_STRDUP
 # undef STRDUP_EMPTY_UNIT
@@ -28,16 +27,16 @@ strdup(
 }
 #endif
 
-#ifndef HAVE_MEMCHR
-# undef STRDUP_EMPTY_UNIT
-void *memchr(const void *s, int c, size_t n)
+#ifndef HAVE__STRUPR
+char *
+_strupr(char *s)
 {
-	const unsigned char *p = s;
-	while (n && *p != c) {
-		--n;
-		++p;
+	char *pch;
+
+	for (pch = s; '\0' != *pch; pch++) {
+		*pch = toupper((u_char)*pch);
 	}
-	return n ? (char*)p : NULL;
+	return s;
 }
 #endif
 
@@ -50,6 +49,4 @@ size_t strnlen(const char *s, size_t n)
 }
 #endif
 
-#ifdef STRDUP_EMPTY_UNIT
 NONEMPTY_TRANSLATION_UNIT
-#endif

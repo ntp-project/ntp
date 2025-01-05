@@ -12,11 +12,12 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
+#include <limits.h>
 #include <stdio.h>
 
+#include <ntp_assert.h>
 #include <ntp_stdlib.h>
 #include <ntp_random.h>
-#include "safecast.h"
 
 #ifdef USE_OPENSSL_CRYPTO_RAND
 #include <openssl/err.h>
@@ -96,7 +97,8 @@ ntp_crypto_random_buf(
 		return -1;
 
 #if defined(USE_OPENSSL_CRYPTO_RAND)
-	if (1 != RAND_bytes(buf, size2int_chk(nbytes))) {
+	REQUIRE(nbytes <= INT_MAX);
+	if (1 != RAND_bytes(buf, (int)nbytes)) {
 		unsigned long err;
 		char *err_str;
 
