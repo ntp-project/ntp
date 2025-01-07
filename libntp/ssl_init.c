@@ -100,15 +100,22 @@ keytype_from_text(
 
 	/*
 	 * If key type string is not recognized but matches our CMAC string
-	 * use NID_cmac, or if it begins with 'M' or 'm' use NID_md5 as we
-	 * have MD5 built-in even without OpenSSL.  The single-letter alias
-	 * M has long been used by ntp-keygen/ntp.keys for MD5.
-	 * When built with OpenSSL MD5 may not be available due to FIPS
-	 * hardening or OpenSSL deprecation..
+	 * use NID_cmac, or if it begins with 'M' or 'm' use NID_md5.  The
+	 * single-letter alias M has long been used by ntp-keygen for MD5
+	 * when generating ntp.keys.
+	 * When built with OpenSSL MD5 may not be available for symmetric
+	 * authentication due to FIPS hardening or OpenSSL deprecation,
+	 * though we'll still have it available for IPv6 refid derivation
+	 * and mode 6 nonces, where other concerns outweigh the reasons
+	 * for its deprecation.
 	 */
 	INIT_SSL();
 
-	upcased = _strupr(strdup(text));
+	if ('m' == tolower(text[0]) && '\0' == text[1]) {
+		upcased = strdup("MD5");
+	} else {
+		upcased = _strupr(strdup(text));
+	}
 	key_type = OBJ_sn2nid(upcased);
 
 # ifdef ENABLE_CMAC
