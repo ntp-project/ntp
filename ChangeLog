@@ -5,6 +5,7 @@
              Fix bug in never-used configure script macro. <hart@ntp.org>
 * [Bug 3940] Once again support symmetric auth using digests > 160 bits.
              <hart@ntp.org>
+* [Bug 3779] plot_summary ignores --plot-term option. <metaed@gmail.com>
 * Reorder restrict_u layout to improve alignment on all platforms.
   <hart@ntp.org>
 * Improve ntpq's "help keytype" list of available digests twice.
