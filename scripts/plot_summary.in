@@ -44,7 +44,7 @@ sub run {
     $offset_limit       = $opts->{'offset-limit'};
     $output_file        = $opts->{'output-file'};
     $output_file_number = 1;
-    $gnuplot_terminal   = $opts->{'plot-terminal'}
+    $gnuplot_terminal   = $opts->{'plot-term'}
     || ( $ENV{DISPLAY} ? "x11" : "dumb" );
     $wait_after_plot    = !$opts->{'dont-wait'};
 
