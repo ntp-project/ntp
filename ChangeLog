@@ -26,6 +26,7 @@
              <hart@ntp.org>
 * [Bug 3877] 4.2.8p16 client rejects server response with zero ppoll.
              <hart@ntp.org>
+* [Bug 3779] plot_summary ignores --plot-term option. <metaed@gmail.com>
 * Makefile.am: Another tweak to check-local.  <stenn@ntp.org>
 * cleanup github-specific files.  <stenn@ntp.org>
 * Add COPYRIGHT.md and LICENSE.md.  <stenn@ntp.org>
