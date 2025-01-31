@@ -1,5 +1,11 @@
 ---
 
+* [Bug 3958] 4.2.8p18 with IPv6 ULA NAT rejects IPv6 pool servers.
+             <hart@ntp.org>  Reported by Cy Schubert on behalf of Dmitrij.
+* Remove undefined behavior use of strlcpy() in normal_dtoa(). <hart@ntp.org>
+
+---
+
 * [Bug 3851] Drop pool server when no local address can reach it.
              <hart@ntp.org>
 * [Bug 3846] Use -Wno-format-truncation by default. <hart@ntp.org>

@@ -5306,7 +5306,13 @@ normal_dtoa(
 		pch_nz++;
 	if (pch_nz == pch_e)
 		return buf;
-	strlcpy(pch_e, pch_nz, LIB_BUFLENGTH - (pch_e - buf));
+	while (   (pch_nz - buf) < (LIB_BUFLENGTH - 1)
+	       && (pch_e  - buf) < (LIB_BUFLENGTH - 1)
+	       && '\0' != *pch_nz) {
+
+		*pch_e++ = *pch_nz++;
+	}
+	*pch_e = '\0';
 
 	return buf;
 }
