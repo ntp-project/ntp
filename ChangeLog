@@ -1,7 +1,8 @@
 ---
-* [Bug 3958] 4.2.8p18 with IPv6 ULA NAT rejects IPv6 pool servers.
-             <hart@ntp.org>  Reported by Cy Schubert on behalf of Dmitrij.
-* Remove undefined behavior use of strlcpy() in normal_dtoa(). <hart@ntp.org>
+
+* [Bug 3958] 4.2.8p18 can't reach servers on an IPv6-Only host.
+             <hart@ntp.org> Reported by Cy Schubert on behalf of Dmitrij.
+* Paranoid buffer safety improvement to normal_dtoa(). <hart@ntp.org>
 
 ---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
