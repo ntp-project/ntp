@@ -1,5 +1,7 @@
 ---
 
+* [Bug 3965] Avoid SHAKE128 in unit tests after OpenSSL 3.4 incompatible
+             change. <hart@ntp.org>
 * [Bug 3933] Restrict structure misaligned on SPARC64. <hart@ntp.org>
 * [Bug 3934] ntp_facilitynames.m4 is broken and unused.
              Fix bug in never-used configure script macro. <hart@ntp.org>
