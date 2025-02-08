@@ -34,7 +34,7 @@ void test_RejectWrongResponseServerMode(void);
 void test_AcceptNoSentPacketBroadcastMode(void);
 void test_CorrectUnauthenticatedPacket(void);
 void test_CorrectAuthenticatedPacketMD5(void);
-void test_CorrectAuthenticatedPacketSHAKE128(void);
+void test_CorrectAuthenticatedPacketSHA256(void);
 void test_CorrectAuthenticatedPacketSHA1(void);
 void test_CorrectAuthenticatedPacketCMAC(void);
 
@@ -222,7 +222,7 @@ test_AuthenticatedPacketInvalid(void)
 	size_t mac_len;
 
 	/* Activate authentication option */
-	PrepareAuthenticationTest(50, 9, "SHAKE128", "123456789");
+	PrepareAuthenticationTest(50, 9, "SHA256", "123456789");
 	TEST_ASSERT_TRUE(ENABLED_OPT(AUTHENTICATION));
 
 	/* Prepare the packet. */
@@ -255,7 +255,7 @@ test_AuthenticatedPacketUnknownKey(void)
 	size_t mac_len;
 
 	/* Activate authentication option */
-	PrepareAuthenticationTest(30, 9, "SHAKE128", "123456789");
+	PrepareAuthenticationTest(30, 9, "SHA256", "123456789");
 	TEST_ASSERT_TRUE(ENABLED_OPT(AUTHENTICATION));
 
 	/* Prepare the packet. Note that the Key-ID expected is 30, but
@@ -457,7 +457,7 @@ test_CorrectAuthenticatedPacketMD5(void)
 
 
 void
-test_CorrectAuthenticatedPacketSHAKE128(void)
+test_CorrectAuthenticatedPacketSHA256(void)
 {
 #ifdef OPENSSL
 
@@ -465,13 +465,13 @@ test_CorrectAuthenticatedPacketSHAKE128(void)
 	int pkt_len = LEN_PKT_NOMAC;
 	int mac_len;
 
-	PrepareAuthenticationTest(k_id, 15, "SHAKE128", "123456789abcdef");
+	PrepareAuthenticationTest(k_id, 15, "SHA256", "123456789abcdef");
 	TEST_ASSERT_TRUE(ENABLED_OPT(AUTHENTICATION));
 
 	/* Prepare the packet. */
 	testpkt.p.exten[0] = htonl(k_id);
 	mac_len = make_mac(&testpkt.p, pkt_len, key_ptr, &testpkt.p.exten[1],
-			   SHAKE128_LENGTH);
+			   MAX_MDG_LEN);
 
 	pkt_len += KEY_MAC_LEN + mac_len;
 
