@@ -564,12 +564,10 @@ struct pkt {
 #define	LEN_PKT_NOMAC	(12 * sizeof(u_int32))	/* min header length */
 #define	MIN_MAC_LEN	(1 * sizeof(u_int32))	/* crypto_NAK */
 #define	MD5_LENGTH	16
-#define	SHAKE128_LENGTH	16
 #define	CMAC_LENGTH	16
 #define	SHA1_LENGTH	20
 #define	KEY_MAC_LEN	(sizeof(u_int32))	/* key ID in MAC */
 #define	MAX_MD5_LEN	(KEY_MAC_LEN + MD5_LENGTH)
-#define	MAX_SHAKE128_LEN (KEY_MAC_LEN + SHAKE128_LENGTH)
 #define	MAX_SHA1_LEN	(KEY_MAC_LEN + SHA1_LENGTH)
 #define	MAX_MAC_LEN	(6 * sizeof(u_int32))	/* any MAC */
 #define	MAX_MDG_LEN	(MAX_MAC_LEN - KEY_MAC_LEN) /* max digest len */
