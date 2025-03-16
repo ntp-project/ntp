@@ -27,9 +27,11 @@ DISTCHECK_CONFIGURE_FLAGS = -C --with-sntp --enable-local-libevent $(NTP_DCF)
 
 EXTRA_DIST =			\
 	$(srcdir)/COPYRIGHT	\
+	COPYRIGHT.md		\
 	ChangeLog		\
 	CommitLog		\
 	CommitLog-4.1.0		\
+	LICENSE.md		\
 	NEWS			\
 	NOTES.y2kfixes		\
 	README.bk		\
@@ -157,7 +159,9 @@ BHOST=`(hostname || uname -n)`
 	fi
 
 check-local:
-	bk version > /dev/null 2>&1 && scripts/build/checkAuthors $(top_srcdir)/BitKeeper/etc/authors.txt $(top_srcdir)/BitKeeper/etc/Authors
+	if bk version > /dev/null 2>&1 && [ -d $(top_srcdir)/BitKeeper/etc ];then \
+		scripts/build/checkAuthors $(top_srcdir)/BitKeeper/etc/authors.txt $(top_srcdir)/BitKeeper/etc/Authors;	\
+	fi
 
 FRC.CommitLog FRC.checkcvo FRC.checkhost FRC.distwarn FRC.html FRC.sntp:
 	@: do-nothing action prevents any default
