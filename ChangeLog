@@ -1,6 +1,8 @@
 ---
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
+* [Bug 3971] ntpd step back rate-limits and KoDs all sources for step
+             duration. Found by kinsey.moore@oarcorp.com <hart@ntp.org>
 * Makefile.am: Another tweak to check-local.  <stenn@ntp.org>
 * cleanup github-specific files.  <stenn@ntp.org>
 * Add COPYRIGHT.md and LICENSE.md.  <stenn@ntp.org>
