@@ -1,8 +1,14 @@
 ---
+* [Bug 3971] ntpd step back rate-limits and KoDs all sources for step
+             duration. Found by kinsey.moore@oarcorp.com <hart@ntp.org>
+* [Bug 3967] ntpd 4.2.8p18 "Address already in use" error with shared IP on
+             multiple interfaces. <hart@ntp.org>
 * [Bug 3965] Avoid SHAKE128 in unit tests after OpenSSL 3.4 incompatible
              change. <hart@ntp.org>
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
+* [Bug 3958] 4.2.8p18 can't reach servers on an IPv6-Only host.
+             <hart@ntp.org> Reported by Cy Schubert on behalf of Dmitrij.
 * [Bug 3954] SHA256 is not working in NTP 4.2.8p18. <hart@ntp.org>
 * [Bug 3943] 4.2.8p18 ignores link-local IPv6 server. <hart@ntp.org>
 * [Bug 3942] DECL_SYSCALL detection does not work on illumos. <hart@ntp.org>
@@ -39,6 +45,7 @@
   hostname for the buildkey.  <stenn@ntp.org>
 * flock-build: Try to use the full hostname for the buildkey.  <stenn@ntp.org>
 * Author attribution updates
+* Paranoid buffer safety improvement to normal_dtoa(). <hart@ntp.org>
 * Display SSL shared library version number in human form. <hart@ntp.org>          
 * Reorder restrict_u layout to improve alignment on all platforms.
   <hart@ntp.org>
@@ -57,14 +64,6 @@
 * Rename is_ip_address() to sau_from_string() to better reflect use.
   <hart@ntp.org>
 * Remove include/safecast.h <hart@ntp.org>
-
----
-
-* [Bug 3958] 4.2.8p18 can't reach servers on an IPv6-Only host.
-             <hart@ntp.org> Reported by Cy Schubert on behalf of Dmitrij.
-* [Bug 3967] ntpd 4.2.8p18 "Address already in use" error with shared IP on
-             multiple interfaces. <hart@ntp.org>
-* Paranoid buffer safety improvement to normal_dtoa(). <hart@ntp.org>
 
 ---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
