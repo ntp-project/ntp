@@ -5335,9 +5335,16 @@ normal_dtoa(
 	pch_nz = pch_e;
 	while ('0' == *pch_nz)
 		pch_nz++;
-	if (pch_nz > pch_e) {
-		memmove(pch_e, pch_nz, 1 + strlen(pch_nz));
+	if (pch_nz == pch_e)
+		return buf;
+	while (   (pch_nz - buf) < (LIB_BUFLENGTH - 1)
+	       && (pch_e  - buf) < (LIB_BUFLENGTH - 1)
+	       && '\0' != *pch_nz) {
+
+		*pch_e++ = *pch_nz++;
 	}
+	*pch_e = '\0';
+
 	return buf;
 }
 
