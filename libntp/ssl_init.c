@@ -122,11 +122,6 @@ keytype_from_text(
 #   ifdef ENABLE_CMAC
 	if (!key_type && !strncmp(CMAC, upcased, strlen(CMAC) + 1)) {
 		key_type = NID_cmac;
-
-		if (debug) {
-			fprintf(stderr, "%s:%d:%s():%s:key\n",
-				__FILE__, __LINE__, __func__, CMAC);
-		}
 	}
 #   endif /*ENABLE_CMAC*/
 #else
