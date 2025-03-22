@@ -3,6 +3,7 @@
              change. <hart@ntp.org>
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
+* [Bug 3954] SHA256 is not working in NTP 4.2.8p18. <hart@ntp.org>
 * [Bug 3943] 4.2.8p18 ignores link-local IPv6 server. <hart@ntp.org>
 * [Bug 3942] DECL_SYSCALL detection does not work on illumos. <hart@ntp.org>
 * [Bug 3940] Once again support symmetric auth using digests > 160 bits.
@@ -13,10 +14,10 @@
 * [Bug 3932] Ignore teredo interfaces in Windows ntpd. <hart@ntp.org>
 * [Bug 3931] Libopts is not respecting VPATH. <hart@ntp.org>
 * [Bug 3930] Windows build mkver.bat races itself. <hart@ntp.org>
-* [Bug 3928] ntpd 4.2.8p18 crash when bringing up net interface fails.
-             <hart@ntp.org>
 * [Bug 3929] 4.2.8p18 -Werror -Wincompatible-pointer-types breaks w/md5.h.
              Wrap MD5Update() calls for varying declarations.  <hart@ntp.org>
+* [Bug 3928] ntpd 4.2.8p18 crash when bringing up net interface fails.
+             <hart@ntp.org>
 * [Bug 3927] 4.2.8p18 configure reverses -L and -l in $LIBS for OpenSSL test.
              Reported by Brian Utterback. <hart@ntp.org>
 * [Bug 3926] pthread_detach() not detected with gcc 14, clang 16.
@@ -42,9 +43,9 @@
 * Reorder restrict_u layout to improve alignment on all platforms.
   <hart@ntp.org>
 * Improve ntpq's "help keytype" list of available digests twice.
-  1. Test each digest rather than assuming that if OpenSSL enumerates it, it
-     will work.  This deals with both deprecation and policy-based exclusion,
-     such as FIPS-hardened OpenSSL.
+  1. Test each digest rather than assuming it will work if OpenSSL
+     enumerates it.  This deals with both deprecation and policy-
+     based exclusion, such as FIPS-hardened OpenSSL.
   2. Include digests which produce more than 160 bits. <hart@ntp.org>
 * Add beefier digests algorithms to tests/libntp/digests.c, and rearrange
   to pass if at least 1/3 of tested digests work.  Previously every
