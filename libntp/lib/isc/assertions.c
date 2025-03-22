@@ -91,8 +91,8 @@ isc_assertion_typetotext(isc_assertiontype_t type) {
 	case isc_assertiontype_invariant:
 		result = "INVARIANT";
 		break;
-	default:
-		result = NULL;
+	default:	/* missed an isc_assertiontype_t value? */
+		result = __func__;
 	}
 	return (result);
 }

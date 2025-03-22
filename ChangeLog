@@ -59,6 +59,14 @@
 * Remove include/safecast.h <hart@ntp.org>
 
 ---
+
+* [Bug 3958] 4.2.8p18 can't reach servers on an IPv6-Only host.
+             <hart@ntp.org> Reported by Cy Schubert on behalf of Dmitrij.
+* [Bug 3967] ntpd 4.2.8p18 "Address already in use" error with shared IP on
+             multiple interfaces. <hart@ntp.org>
+* Paranoid buffer safety improvement to normal_dtoa(). <hart@ntp.org>
+
+---
 (4.2.8p18) 2024/05/25 Released by Harlan Stenn <stenn@ntp.org>
 
 * [Bug 3918] Tweak openssl header/library handling. <stenn@ntp.org>

@@ -35,6 +35,9 @@
  * Copy src to string dst of size siz.  At most siz-1 characters
  * will be copied.  Always NUL terminates (unless siz == 0).
  * Returns strlen(src); if retval >= siz, truncation occurred.
+ * 
+ * Quoting from FreeBSD 14.2 `man strlcpy`:
+ * If the src and dst strings overlap, the behavior is undefined.
  */
 size_t
 strlcpy(char *dst, const char *src, size_t siz)
@@ -92,6 +95,9 @@ strlcpy(char *dst, const char *src, size_t siz)
  * will be copied.  Always NUL terminates (unless siz <= strlen(dst)).
  * Returns strlen(src) + MIN(siz, strlen(initial dst)).
  * If retval >= siz, truncation occurred.
+ *
+ * Quoting from FreeBSD 14.2 `man strlcat`:
+ * If the src and dst strings overlap, the behavior is undefined.
  */
 size_t
 strlcat(char *dst, const char *src, size_t siz)
