@@ -27,9 +27,11 @@ DISTCHECK_CONFIGURE_FLAGS = -C --with-sntp --enable-local-libevent $(NTP_DCF)
 
 EXTRA_DIST =			\
 	$(srcdir)/COPYRIGHT	\
+	COPYRIGHT.md		\
 	ChangeLog		\
 	CommitLog		\
 	CommitLog-4.1.0		\
+	LICENSE.md		\
 	NEWS			\
 	NOTES.y2kfixes		\
 	README.bk		\
