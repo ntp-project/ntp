@@ -31,10 +31,15 @@ check_PROGRAMS += 		\
 	test-rc_cmdlength	\
 	$(NULL)
 
+check_PROGRAMS += 		\
+	test-refclock_zyfer	\
+	$(NULL)
+
 EXTRA_PROGRAMS =		\
 	test-ntp_restrict	\
 	test-ntp_scanner	\
 	test-ntp_signd		\
+	test-refclock_zyfer	\
 	$(NULL)
 
 
@@ -197,6 +202,27 @@ test_ntp_scanner_SOURCES =			\
 
 $(srcdir)/run-t-ntp_scanner.c: $(srcdir)/t-ntp_scanner.c $(std_unity_list)
 	$(run_unity) $< $@
+
+###
+
+test_refclock_zyfer_CFLAGS =		\
+	$(AM_CFLAGS)			\
+	-I$(top_srcdir)/sntp/unity	\
+	$(NULL)
+
+test_refclock_zyfer_LDADD =				\
+	$(top_builddir)/libntp/libntp.a		\
+	$(LDADD_LIBNTP)				\
+	$(top_builddir)/sntp/unity/libunity.a	\
+	$(LIBM)					\
+	$(PTHREAD_LIBS)				\
+	$(LDADD_NTP)				\
+	$(NULL)
+
+test_refclock_zyfer_SOURCES =		\
+	t-refclock_zyfer.c		\
+	run-t-refclock_zyfer.c		\
+	$(NULL)
 
 
 TESTS =

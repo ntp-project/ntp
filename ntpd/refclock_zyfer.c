@@ -97,6 +97,13 @@ struct zyferunit {
 	int	Rcvptr;
 };
 
+static void
+zyfer_process_timecode(
+	struct peer *		peer,
+	struct refclockproc *	pp,
+	struct zyferunit *	up
+	);
+
 /*
  * Function prototypes
  */
@@ -207,64 +214,93 @@ zyfer_receive(
 	register struct zyferunit *up;
 	struct refclockproc *pp;
 	struct peer *peer;
-	int tmode;		/* Time mode */
-	int tfom;		/* Time Figure Of Merit */
-	int omode;		/* Operation mode */
-	u_char *p;
-
-	TCivilDate	tsdoy;
-	TNtpDatum	tsntp;
-	l_fp		tfrac;
+	const u_char *buf;
+	size_t buflen;
+	size_t i;
+	int frames_processed;
 	
 	peer = rbufp->recv_peer;
 	pp = peer->procptr;
 	up = pp->unitptr;
-	p = (u_char *) &rbufp->recv_space;
+
 	/*
-	 * If lencode is 0:
-	 * - if *rbufp->recv_space is !
-	 * - - call refclock_gtlin to get things going
-	 * - else flush
-	 * else stuff it on the end of lastcode
-	 * If we don't have LENZYFER bytes
-	 * - wait for more data
-	 * Crack the beast, and if it's OK, process it.
+	 * Zyfer TOD is a fixed-length ASCII frame which begins with '!'
+	 * and is not EOL-terminated.  Assemble exactly LENZYFER bytes into
+	 * a per-unit buffer, resynchronizing on '!' and rejecting
+	 * non-printable characters.
 	 *
-	 * We use refclock_gtlin() because we might use LDISC_CLK.
-	 *
-	 * Under FreeBSD, we get the ! followed by two 14-byte packets.
+	 * This avoids unbounded appends into pp->a_lastcode (BMAX).
 	 */
-
-	if (pp->lencode >= LENZYFER)
-		pp->lencode = 0;
-
-	if (!pp->lencode) {
-		if (*p == '!')
-			pp->lencode = refclock_gtlin(rbufp, pp->a_lastcode,
-						     BMAX, &pp->lastrec);
-		else
-			return;
-	} else {
-		memcpy(pp->a_lastcode + pp->lencode, p, rbufp->recv_length);
-		pp->lencode += rbufp->recv_length;
-		pp->a_lastcode[pp->lencode] = '\0';
-	}
-
-	if (pp->lencode < LENZYFER)
+	if (rbufp->recv_length <= 0)
 		return;
 
-	record_clock_stats(&peer->srcadr, pp->a_lastcode);
+	buf = (const u_char *)&rbufp->recv_space;
+	buflen = (size_t)rbufp->recv_length;
+	i = 0;
+	frames_processed = 0;
+
+	while (i < buflen) {
+		u_char c;
+
+		c = buf[i++] & 0x7f;
+		if (c < 0x20 || c >= 0x7f) {
+			/* Drop control/invalid bytes and resync. */
+			up->Rcvptr = 0;
+			pp->lencode = 0;
+			continue;
+		}
+
+		if (up->Rcvptr == 0 && c != '!')
+			continue;
+
+		if (up->Rcvptr < LENZYFER) {
+			up->Rcvbuf[up->Rcvptr++] = c;
+			pp->lencode = up->Rcvptr;
+			pp->lastrec = rbufp->recv_time;
+		}
+
+		if (up->Rcvptr < LENZYFER)
+			continue;
+
+		/* Completed frame. Safe: LENZYFER (29) << BMAX (128). */
+		up->Rcvbuf[LENZYFER] = '\0';
+		memcpy(pp->a_lastcode, up->Rcvbuf, LENZYFER + 1);
+		pp->lencode = LENZYFER;
+		up->Rcvptr = 0;
+
+		zyfer_process_timecode(peer, pp, up);
+		frames_processed++;
+	}
+
+	(void)frames_processed;
+}
+
+
+static void
+zyfer_process_timecode(
+	struct peer *		peer,
+	struct refclockproc *	pp,
+	struct zyferunit *	up
+	)
+{
+	int tmode;		/* Time mode */
+	int tfom;		/* Time Figure Of Merit */
+	int omode;		/* Operation mode */
+	TCivilDate	tsdoy;
+	TNtpDatum	tsntp;
+	l_fp		tfrac;
 
 	/*
 	 * We get down to business, check the timecode format and decode
 	 * its contents. If the timecode has invalid length or is not in
 	 * proper format, we declare bad format and exit.
 	 */
-
 	if (pp->lencode != LENZYFER) {
 		refclock_report(peer, CEVNT_BADTIME);
 		return;
 	}
+
+	record_clock_stats(&peer->srcadr, pp->a_lastcode);
 
 	/*
 	 * Timecode sample: "!TIME,2002,017,07,59,32,2,4,1"
@@ -282,6 +318,7 @@ zyfer_receive(
 	}
 
 	/* Should we make sure tfom is 4? */
+	(void)tfom;
 
 	if (omode != 1) {
 		pp->leap = LEAP_NOTINSYNC;
@@ -297,7 +334,7 @@ zyfer_receive(
 	tsdoy.hour    = pp->hour;
 	tsdoy.minute  = pp->minute;
 	tsdoy.second  = pp->second;
-	
+
 	/* note: We kept 'month' and 'monthday' zero above. That forces
 	 * day-of-year based calculation now:
 	 */
@@ -305,9 +342,6 @@ zyfer_receive(
 	tfrac = ntpfp_from_ntpdatum(&tsntp);
 	refclock_process_offset(pp, tfrac, pp->lastrec, pp->fudgetime1);
 
-	/*
-	 * Good place for record_clock_stats()
-	 */
 	up->pollcnt = 2;
 
 	if (up->polled) {

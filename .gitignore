@@ -7,3 +7,4 @@
 **/version.*
 **/*.mf
 sntp/libevent/build-aux
+.DS_Store
