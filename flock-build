@@ -7,7 +7,7 @@ case "$1" in
  '--one'|'-1')
      shift
      FB_FIRSTONLY=1
-     LIST=$MYNAME
+     LIST=$IAM
      ;;
  *)
      FB_FIRSTONLY=0
@@ -51,7 +51,7 @@ c_d=${PWD:-`pwd`}
 SIG=`perl -e 'print rand'`
 
 case "$LIST" in
- '') LIST="pogo" ;;
+ '') LIST="pogo.udel.edu" ;;
 esac
 
 for i in $LIST

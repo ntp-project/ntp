@@ -705,12 +705,12 @@ local_clock(
 				 * becomes ineffective above the Allan intercept
 				 * where the FLL becomes effective.
 				 */
-				if (sys_poll >= allan_xpt)
+				if (sys_poll >= allan_xpt) {
 					clock_frequency +=
 					      (fp_offset - clock_offset)
-					    / ( max(ULOGTOD(sys_poll), mu)
-					       * CLOCK_FLL);
-
+					      / max(ULOGTOD(sys_poll), mu)
+					      * CLOCK_FLL;
+				}
 				/*
 				 * The PLL frequency gain (numerator) depends on
 				 * the minimum of the update interval and Allan
