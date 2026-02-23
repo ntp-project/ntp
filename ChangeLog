@@ -1,5 +1,19 @@
+* build script: Use hostname.site for NTF build hosts.  Use the full
+  hostname for the buildkey.  <stenn@ntp.org>
+* flock-build: Try to use the full hostname for the buildkey.  <stenn@ntp.org>
+
+(4.3.108) 2026/02/18 Released by Harlan Stenn <stenn@ntp.org>
+
+* [Bug 3053] Frequency prediction algorithm precedence error. <hart@ntp.org>
+* Update the copyright year.  <stenn@ntp.org>
+
+(4.3.107) 2024/12/28 Released by Harlan Stenn <stenn@ntp.org>
+
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
+* Makefile.am: Another tweak to check-local.  <stenn@ntp.org>
+* cleanup github-specific files.  <stenn@ntp.org>
+* Add COPYRIGHT.md and LICENSE.md.  <stenn@ntp.org>
 * Makefile.am: Fix distcheck problem with check-local.  <stenn@ntp.org>
 * Add .github to the top-level tree. <dlavigne@nwtime.org>
 	

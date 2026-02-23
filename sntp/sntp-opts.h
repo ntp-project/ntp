@@ -1,7 +1,7 @@
 /*
  *  EDIT THIS FILE WITH CAUTION  (sntp-opts.h)
  *
- *  It has been AutoGen-ed  November 28, 2024 at 12:04:00 AM by AutoGen 5.18.16
+ *  It has been AutoGen-ed  February 18, 2026 at 03:54:26 PM by AutoGen 5.18.16
  *  From the definitions    sntp-opts.def
  *  and the template file   options
  *
@@ -18,7 +18,7 @@
  * The sntp program is copyrighted and licensed
  * under the following terms:
  *
- *  Copyright (C) 1992-2024 The University of Delaware and Network Time Foundation, all rights reserved.
+ *  Copyright (C) 1992-2025 The University of Delaware and Network Time Foundation, all rights reserved.
  *  This is free software. It is licensed for use, modification and
  *  redistribution under the terms of the NTP License, copies of which
  *  can be seen at:
@@ -99,9 +99,9 @@ typedef enum {
 /** count of all options for sntp */
 #define OPTION_CT    23
 /** sntp version */
-#define SNTP_VERSION       "4.3.106"
+#define SNTP_VERSION       "4.3.108"
 /** Full sntp version text */
-#define SNTP_FULL_VERSION  "sntp 4.3.106"
+#define SNTP_FULL_VERSION  "sntp 4.3.108"
 
 /**
  *  Interface defines for all options.  Replace "n" with the UPPER_CASED
