@@ -1507,7 +1507,7 @@ parse0x8FAD(
 	utcflags =	buf[19];
 
 
-	sprintf(logbuf, "U1 %d.%d.%d %02d:%02d:%02d %d %02x",
+	snprintf(logbuf, sizeof(logbuf), "U1 %d.%d.%d %02d:%02d:%02d %d %02x",
 		day, month, year, hour, minute, second, trackstat, utcflags);
 
 #ifdef DEBUG_NCC
@@ -1674,7 +1674,7 @@ parse0x8F0B(
 	}
 
 
-	sprintf(logbuf, "C1 %02d%02d%04d %02d%02d%02d %d %7.0f %.1f %.0f %.1f %d %02d%09.6f %c %02d%09.6f %c %.0f  %d %d %d %d %d %d %d %d",
+	snprintf(logbuf, sizeof(logbuf), "C1 %02d%02d%04d %02d%02d%02d %d %7.0f %.1f %.0f %.1f %d %02d%09.6f %c %02d%09.6f %c %.0f  %d %d %d %d %d %d %d %d",
 		day, month, year, hour, minute, second, mode, bias, biasunc,
 		rate, rateunc, utcoff, lat_deg, lat_min, north_south, lon_deg,
 		lon_min, east_west, alt, sv[0], sv[1], sv[2], sv[3], sv[4],
@@ -1750,7 +1750,7 @@ parse0x4F(
 	dn = bGetShort (&buf[22]);
 	dt_lsf = bGetShort (&buf[24]);
 
-	sprintf(logbuf, "L1 %d %d %d %g %g %g %d %d %d",
+	snprintf(logbuf, sizeof(logbuf), "L1 %d %d %d %g %g %g %d %d %d",
 		dt_lsf - dt_ls, dt_ls, dt_lsf, a0, a1, tot, wn_t, wn_lsf, dn); 
 
 #ifdef DEBUG_NCC
@@ -1802,7 +1802,7 @@ parse0x5C(
 	elevation = bGetSingle(&buf[12]) * R2D;
 	azinuth = bGetSingle(&buf[16]) * R2D;
 
-	sprintf(logbuf, "S1 %02d %d %d %02x %4.1f %5.1f %4.1f",
+	snprintf(logbuf, sizeof(logbuf), "S1 %02d %d %d %02x %4.1f %5.1f %4.1f",
 		prn, channel, aqflag, ephstat, snr, azinuth, elevation);
 
 #ifdef DEBUG_NCC
