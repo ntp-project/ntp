@@ -1141,8 +1141,16 @@ leapsec_validate(
 		return LSVALID_NOHASH;
 	if (0 == hlseen)
 		return LSVALID_BADFORMAT;
-	if (0 != memcmp(&rdig, &ldig, sizeof(sha1_digest)))
-		return LSVALID_BADHASH;
+	{
+		volatile unsigned char diff = 0;
+		const unsigned char *a = (const unsigned char *)&rdig;
+		const unsigned char *b = (const unsigned char *)&ldig;
+		size_t i;
+		for (i = 0; i < sizeof(sha1_digest); i++)
+			diff |= a[i] ^ b[i];
+		if (diff != 0)
+			return LSVALID_BADHASH;
+	}
 	return LSVALID_GOODHASH;
 }
 

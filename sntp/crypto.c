@@ -174,11 +174,16 @@ auth_md5(
 
 	pkt_ptr += pkt_len + sizeof(keyid_t);
 
-	/* isc_tsmemcmp will be better when its easy to link with.  sntp
-	 * is a 1-shot program, so snooping for timing attacks is
-	 * Harder.
-	 */
-	return mac_len == len && !memcmp(dbuf, pkt_ptr, mac_len);
+	/* Use constant-time comparison for MAC verification. */
+	if (mac_len != len)
+		return 0;
+	{
+		volatile unsigned char diff = 0;
+		size_t i;
+		for (i = 0; i < mac_len; i++)
+			diff |= dbuf[i] ^ pkt_ptr[i];
+		return (diff == 0);
+	}
 }
 
 static int
