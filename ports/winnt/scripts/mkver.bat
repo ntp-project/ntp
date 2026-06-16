@@ -21,6 +21,8 @@ see notes/remarks directly below this header:
 #
 # Changes:
 #
+# 06/10/2025	Lukas Grützmacher
+#				- Add support for build from git repository
 # 04/01/2023	Dave Hart
 #				- Use fast 'bk root' to check for BitKeeper
 #				  instead of invocation that gets ChangeSet.
@@ -138,7 +140,7 @@ IF {%1} == {-G} (
 	SET GENERATESCMREV=%2
 	SET OUTPUTSCMREV=%2
 	IF NOT {%3} == {} GOTO USAGE
-	GOTO GENERATE_SCM_REV
+	GOTO GENERATE_SCM_BK_REV
 )
 IF {%1} == {-S} (
 	IF {%2} == {} GOTO USAGE
@@ -304,19 +306,27 @@ REM ****************************************************************************
 	
 	REM Now we have the version info, try to add a BK ChangeSet revision
 
-	IF "%SCMREV%" == "" GOTO GENERATE_SCM_REV
+	IF "%SCMREV%" == "" GOTO GENERATE_SCM_BK_REV
 
 	REM ** Called as -S to use generated scm-rev file.
 	FOR /F "TOKENS=1" %%a IN ('type %SCMREV%') DO @SET CSET=%%a
 	GOTO HAVECHANGESETREVISION
 
-:GENERATE_SCM_REV
+:GENERATE_SCM_BK_REV
 	REM ** Check if BK is installed ...
 	bk root ../../../.. 2> NUL > NUL
-	IF ERRORLEVEL 1 GOTO NOBK
+	IF ERRORLEVEL 1 GOTO GENERATE_SCM_GIT_REV
 
 	REM ** Try to get the CSet rev directly from BK
 	FOR /F "TOKENS=1 DELIMS==" %%a IN ('bk.exe -R prs -hr+ -nd:I: ChangeSet') DO @SET CSET=%%a
+	GOTO WRITE_SCM_REV
+
+:GENERATE_SCM_GIT_REV
+	git rev-parse --short HEAD 2> NUL > NUL
+	IF ERRORLEVEL 1 GOTO NOBK
+
+	FOR /F "TOKENS=1" %%a IN ('git rev-parse --short HEAD') DO @SET CSET=%%a
+	GOTO WRITE_SCM_REV
 
 :NOBK
 	IF NOT "%GENERATESCMREV%" == "" GOTO WRITE_SCM_REV
