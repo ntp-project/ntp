@@ -1967,7 +1967,7 @@ tsip_input_proc(
 		}
 		break;
 	}
-	if (rpt->len > MAX_RPTBUF) {
+	if (rpt->len >= MAX_RPTBUF) {
 		/* error: start new report packet */
 		rpt->status = TSIP_PARSED_EMPTY;
 		rpt->len = 0;

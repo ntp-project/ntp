@@ -1391,7 +1391,7 @@ palisade_io (
 		else if (up->rpt_status == TSIP_PARSED_EMPTY)
 			up->rpt_cnt = 0;
 
-		else if (up->rpt_cnt > BMAX) 
+		else if (up->rpt_cnt >= BMAX - 1)
 			up->rpt_status =TSIP_PARSED_EMPTY;
 
 		if (up->rpt_status == TSIP_PARSED_FULL) 
