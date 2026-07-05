@@ -245,8 +245,14 @@ zyfer_receive(
 		else
 			return;
 	} else {
-		memcpy(pp->a_lastcode + pp->lencode, p, rbufp->recv_length);
-		pp->lencode += rbufp->recv_length;
+		int rlen = rbufp->recv_length;
+
+		/* clamp to the space left in a_lastcode so a long
+		   follow-up packet can not overrun the buffer */
+		if (rlen > BMAX - 1 - pp->lencode)
+			rlen = BMAX - 1 - pp->lencode;
+		memcpy(pp->a_lastcode + pp->lencode, p, (size_t)rlen);
+		pp->lencode += rlen;
 		pp->a_lastcode[pp->lencode] = '\0';
 	}
 
