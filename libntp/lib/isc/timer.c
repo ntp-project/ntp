@@ -36,6 +36,7 @@
 
 #ifdef OPENSSL_LEAKS
 #include <openssl/err.h>
+#include <openssl/opensslv.h>
 #endif
 
 /* See task.c about the following definition: */
@@ -836,7 +837,10 @@ run(void *uap) {
 	UNLOCK(&manager->lock);
 
 #ifdef OPENSSL_LEAKS
+#if OPENSSL_VERSION_NUMBER < 0x40000000L
+	/* ERR_remove_state() was removed in OpenSSL 4.0 (was a no-op). */
 	ERR_remove_state(0);
+#endif
 #endif
 
 	return ((isc_threadresult_t)0);

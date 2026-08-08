@@ -1,4 +1,7 @@
 ---
+* [Bug 4023] Enable building with OpenSSL 4.0 while remaining
+             compatible with OpenSSL 3. Use ASN1_TIME_to_tm() and
+             ASN1_STRING accessors for opaque ASN1 types.
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
 * [Bug 3053] Frequency prediction algorithm precedence error. <hart@ntp.org>

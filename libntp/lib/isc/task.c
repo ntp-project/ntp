@@ -42,6 +42,7 @@
 
 #ifdef OPENSSL_LEAKS
 #include <openssl/err.h>
+#include <openssl/opensslv.h>
 #endif
 
 /*%
@@ -1285,7 +1286,8 @@ run(void *uap) {
 	XTHREADTRACE(isc_msgcat_get(isc_msgcat, ISC_MSGSET_GENERAL,
 				    ISC_MSG_EXITING, "exiting"));
 
-#ifdef OPENSSL_LEAKS
+#if defined(OPENSSL_LEAKS) && OPENSSL_VERSION_NUMBER < 0x40000000L
+	/* ERR_remove_state() was removed in OpenSSL 4.0 (was a no-op). */
 	ERR_remove_state(0);
 #endif
 
