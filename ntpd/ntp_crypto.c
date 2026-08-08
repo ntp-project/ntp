@@ -2020,6 +2020,25 @@ asn_to_calendar	(
 	struct calendar *pjd	/* pointer to result */
 	)
 {
+	/*
+	 * OpenSSL 4 makes ASN1_TIME opaque; ASN1_TIME_to_tm() is the
+	 * supported accessor and also works with OpenSSL 3.
+	 * Prefer it whenever available (OpenSSL 1.1.1+) so one path
+	 * covers both OpenSSL 3 and OpenSSL 4.
+	 */
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+	struct tm	t;
+
+	INSIST(ASN1_TIME_to_tm(asn1time, &t) == 1);
+
+	pjd->second	= t.tm_sec;
+	pjd->minute	= t.tm_min;
+	pjd->hour	= t.tm_hour;
+	pjd->monthday	= t.tm_mday;
+	pjd->month	= t.tm_mon + 1;	/* tm_mon is 0..11 */
+	pjd->year	= t.tm_year + 1900;	/* years since 1900 */
+	pjd->yearday = pjd->weekday = 0;
+#else	/* OpenSSL < 1.1.1 follows */
 	size_t	len;		/* length of ASN1_TIME string */
 	char	v[24];		/* writable copy of ASN1_TIME string */
 	unsigned long	temp;	/* result from strtoul */
@@ -2065,7 +2084,7 @@ asn_to_calendar	(
 	pjd->year = temp;
 
 	pjd->yearday = pjd->weekday = 0;
-	return;
+#endif
 }
 
 
@@ -3518,7 +3537,9 @@ cert_parse(
 		X509_EXTENSION *ext;
 		ASN1_OBJECT *obj;
 		int nid;
+		int datalen;
 		ASN1_OCTET_STRING *data;
+		const unsigned char *dataptr;
 
 		ext = X509_get_ext(cert, i);
 		obj = X509_EXTENSION_get_object(ext);
@@ -3548,11 +3569,23 @@ cert_parse(
 		/*
 		 * If a NID_subject_key_identifier field is present, it
 		 * contains the GQ public key.
+		 * Use ASN1_STRING accessors so this builds with both
+		 * OpenSSL 3 (visible ASN1_STRING fields) and OpenSSL 4
+		 * (opaque ASN1 types).
 		 */
 		case NID_subject_key_identifier:
 			data = X509_EXTENSION_get_data(ext);
-			ret->grpkey = BN_bin2bn(&data->data[2],
-			    data->length - 2, NULL);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+			datalen = ASN1_STRING_length(data);
+			dataptr = ASN1_STRING_get0_data(data);
+#else
+			datalen = data->length;
+			dataptr = data->data;
+#endif
+			if (datalen > 2 && dataptr != NULL) {
+				ret->grpkey = BN_bin2bn(dataptr + 2,
+				    datalen - 2, NULL);
+			}
 			/* fall through */
 		default:
 			DPRINTF(1, ("cert_parse: %s\n",
