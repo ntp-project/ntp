@@ -6,7 +6,7 @@
 #
 # EDIT THIS FILE WITH CAUTION  (invoke-ntp-keygen.texi)
 #
-# It has been AutoGen-ed  May 25, 2024 at 12:04:48 AM by AutoGen 5.18.16
+# It has been AutoGen-ed  April  6, 2025 at 10:51:34 PM by AutoGen 5.18.16
 # From the definitions    ntp-keygen-opts.def
 # and the template file   agtexi-cmd.tpl
 @end ignore
