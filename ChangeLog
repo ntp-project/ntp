@@ -1,7 +1,8 @@
 ---
 * [Bug 3960] Remove duplicate ntp.conf.def content, reported by
              Ulrich Windl. <stenn@ntp.org>
-* [Bug 3053] Frequency prediction algorithm precedence error. <hart@ntp.org>
+* [Bug 3053] Frequency prediction algorithm precedence error, fix by
+             Leonid Evdokimov <leon+ntp@darkk.net.ru>. <hart@ntp.org>
 * Update the copyright year.  <stenn@ntp.org>
 * Makefile.am: Another tweak to check-local.  <stenn@ntp.org>
 * cleanup github-specific files.  <stenn@ntp.org>
