@@ -36,6 +36,9 @@
 * [Bug 3877] 4.2.8p16 client rejects server response with zero ppoll.
              <hart@ntp.org>
 * [Bug 3779] plot_summary ignores --plot-term option. <metaed@gmail.com>
+* [Bug 3053] Frequency prediction algorithm precedence error, fix by
+             Leonid Evdokimov <leon+ntp@darkk.net.ru>. <hart@ntp.org>
+* Update the copyright year.  <stenn@ntp.org>
 * Makefile.am: Another tweak to check-local.  <stenn@ntp.org>
 * cleanup github-specific files.  <stenn@ntp.org>
 * Add COPYRIGHT.md and LICENSE.md.  <stenn@ntp.org>
@@ -46,7 +49,7 @@
 * flock-build: Try to use the full hostname for the buildkey.  <stenn@ntp.org>
 * Author attribution updates
 * Paranoid buffer safety improvement to normal_dtoa(). <hart@ntp.org>
-* Display SSL shared library version number in human form. <hart@ntp.org>          
+* Display SSL shared library version number in human form. <hart@ntp.org> 
 * Reorder restrict_u layout to improve alignment on all platforms.
   <hart@ntp.org>
 * Improve ntpq's "help keytype" list of available digests twice.

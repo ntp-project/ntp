@@ -1,7 +1,7 @@
 /*
  *  EDIT THIS FILE WITH CAUTION  (ntpsnmpd-opts.c)
  *
- *  It has been AutoGen-ed  May 25, 2024 at 12:04:35 AM by AutoGen 5.18.16
+ *  It has been AutoGen-ed  April  6, 2025 at 10:51:22 PM by AutoGen 5.18.16
  *  From the definitions    ntpsnmpd-opts.def
  *  and the template file   options
  *
@@ -18,7 +18,7 @@
  * The ntpsnmpd program is copyrighted and licensed
  * under the following terms:
  *
- *  Copyright (C) 1992-2024 The University of Delaware and Network Time Foundation, all rights reserved.
+ *  Copyright (C) 1992-2025 The University of Delaware and Network Time Foundation, all rights reserved.
  *  This is free software. It is licensed for use, modification and
  *  redistribution under the terms of the NTP License, copies of which
  *  can be seen at:
@@ -67,7 +67,7 @@ extern FILE * option_usage_fp;
  */
 static char const ntpsnmpd_opt_strs[1614] =
 /*     0 */ "ntpsnmpd 4.2.8p18\n"
-            "Copyright (C) 1992-2024 The University of Delaware and Network Time Foundation, all rights reserved.\n"
+            "Copyright (C) 1992-2025 The University of Delaware and Network Time Foundation, all rights reserved.\n"
             "This is free software. It is licensed for use, modification and\n"
             "redistribution under the terms of the NTP License, copies of which\n"
             "can be seen at:\n"
@@ -560,7 +560,7 @@ static void bogus_function(void) {
    */
   /* referenced via ntpsnmpdOptions.pzCopyright */
   puts(_("ntpsnmpd 4.2.8p18\n\
-Copyright (C) 1992-2024 The University of Delaware and Network Time Foundation, all rights reserved.\n\
+Copyright (C) 1992-2025 The University of Delaware and Network Time Foundation, all rights reserved.\n\
 This is free software. It is licensed for use, modification and\n\
 redistribution under the terms of the NTP License, copies of which\n\
 can be seen at:\n"));

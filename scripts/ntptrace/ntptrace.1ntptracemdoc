@@ -1,9 +1,9 @@
-.Dd May 25 2024
+.Dd April 6 2025
 .Dt NTPTRACE 1ntptracemdoc User Commands
 .Os
 .\"  EDIT THIS FILE WITH CAUTION  (ntptrace-opts.mdoc)
 .\"
-.\"  It has been AutoGen-ed  May 25, 2024 at 12:05:47 AM by AutoGen 5.18.16
+.\"  It has been AutoGen-ed  April  6, 2025 at 10:50:22 PM by AutoGen 5.18.16
 .\"  From the definitions    ntptrace-opts.def
 .\"  and the template file   agmdoc-cmd.tpl
 .Sh NAME
