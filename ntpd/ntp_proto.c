@@ -327,10 +327,10 @@ valid_NAK(
 	 * Only server responses can contain NAK's
 	 */
 
-	if (hismode != MODE_SERVER &&
-	    hismode != MODE_ACTIVE &&
-	    hismode != MODE_PASSIVE
-	    ) {
+	if (   hismode != MODE_SERVER
+	    && hismode != MODE_ACTIVE
+	    && hismode != MODE_PASSIVE
+	   ) {
 		return INVALIDNAK;
 	}
 
@@ -805,7 +805,7 @@ receive(
 
 	/*
 	 * Validate the poll interval in the packet.
-	 * 0 probably indicates a data-minimized packet.
+	 * 0 can indicate a data-minimized packet.
 	 * A valid poll interval is required for RATEKISS, where
 	 * a value of 0 is not allowed.  We check for this below.
 	 * 
@@ -2305,11 +2305,32 @@ receive(
 	 * this maximum and advance the headway to give the sender some
 	 * headroom. Very intricate.
 	 */
+
+	/* HMS: XXX
+	** make sure NTP_MINPOLL <= pkt->ppoll <= NTP_MAXPOLL
+	**
+	** Remember that data minimized or broken implementations
+	** may send a packet with a 0 ppoll.  How sure are we that
+	** peer->minpoll is in a valid range?
+	*/
+	if (peer->ppoll != max(peer->minpoll,pkt->ppoll)) {
+		msyslog(LOG_INFO,
+			"receive: peer->ppoll changing from %d to max(peer->minpoll (%d), pkt->ppoll (%d)) per %s",
+			peer->ppoll, peer->minpoll, pkt->ppoll,
+			stoa(&rbufp->recv_srcadr));
+	}
 	peer->ppoll = max(peer->minpoll, pkt->ppoll);
 
 	/*
 	 * Check for any kiss codes. Note this is only used when a server
 	 * responds to a client request.
+	 *
+	 * Note Well: by this time, we've already just used pkt->ppoll...
+	 * Harlan thinks that for RATEKISS (at least) we might want to
+	 * delay setting peer->ppoll until after we validate pkt->ppoll.
+	 *
+	 * HMS: Best to make sure we've sanity checked pkt->ppoll already,
+	 * and data minimizing and broken folks may send a 0 pkt->ppoll.
 	 */
 	if (kissCode == RATEKISS) {
 		if (   pkt->ppoll < NTP_MINPOLL
