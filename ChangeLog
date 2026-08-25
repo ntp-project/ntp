@@ -1,4 +1,5 @@
 ---
+
 * [Bug 3971] ntpd step back rate-limits and KoDs all sources for step
              duration. Found by kinsey.moore@oarcorp.com <hart@ntp.org>
 * [Bug 3967] ntpd 4.2.8p18 "Address already in use" error with shared IP on
@@ -38,6 +39,7 @@
 * [Bug 3779] plot_summary ignores --plot-term option. <metaed@gmail.com>
 * [Bug 3053] Frequency prediction algorithm precedence error, fix by
              Leonid Evdokimov <leon+ntp@darkk.net.ru>. <hart@ntp.org>
+* More ppoll cleanup in ntp_proto.c.  <stenn@ntp.org>
 * Update the copyright year.  <stenn@ntp.org>
 * Makefile.am: Another tweak to check-local.  <stenn@ntp.org>
 * cleanup github-specific files.  <stenn@ntp.org>
