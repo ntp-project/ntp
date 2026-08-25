@@ -517,9 +517,6 @@
     <ClInclude Include="..\..\libntp\messages.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\safecast.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\libntp.h">
       <Filter>Header Files</Filter>
     </ClInclude>

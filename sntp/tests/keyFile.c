@@ -28,8 +28,8 @@ CompareKeys(
 		return FALSE;
 	}
 	if (expected.key_len != actual.key_len) {
-		printf("Expected key_len: %d but was: %d\n",
-		       expected.key_len, actual.key_len);
+		printf("Expected key_len: %lu but was: %lu\n",
+		       (u_long)expected.key_len, (u_long)actual.key_len);
 		return FALSE;
 	}
 	if (strcmp(expected.typen, actual.typen) != 0) {

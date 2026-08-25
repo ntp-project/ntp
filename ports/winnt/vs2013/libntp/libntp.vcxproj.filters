@@ -577,9 +577,6 @@
     <ClInclude Include="..\..\..\..\libntp\lib\isc\win32\include\isc\win32os.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\safecast.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\libntp.h">
       <Filter>Header Files</Filter>
     </ClInclude>

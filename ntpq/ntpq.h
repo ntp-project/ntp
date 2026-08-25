@@ -118,6 +118,19 @@ typedef struct var_format_tag {
 	u_short		fmt;
 } var_format;
 
+
+/*
+ * Supporting digest_alg_works(), provide a union type to help with our
+ * code's quirky use of u_int32 pointers for packets while digest routines
+ * want byte pointers.
+ */
+#define DIGEST_TEST_BUF_LEN (MIN_V4_PKT_LEN + MAX_MAC_LEN)
+typedef union pay_u_tag {
+	u_int32	ui[DIGEST_TEST_BUF_LEN / sizeof(u_int32)];
+	u_char	c[DIGEST_TEST_BUF_LEN];
+} pay_u;
+#undef DIGEST_TEST_BUF_LEN
+
 typedef struct chost_tag chost;
 struct chost_tag {
 	const char *name;

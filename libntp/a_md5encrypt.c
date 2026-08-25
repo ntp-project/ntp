@@ -21,6 +21,28 @@ typedef struct {
 	size_t		len;
 } rwbuffT;
 
+bool	suppress_digest_errors;		/* for ntpq digest_alg_works() */
+
+
+static inline void	digst_msyslog(int level, const char* fmt, ...) NTP_PRINTF(2, 3);
+
+static inline void
+digst_msyslog(
+	int		level,
+	const char *	fmt, 
+	...
+	)
+{
+	va_list	ap;
+
+	if (!suppress_digest_errors) {
+		va_start(ap, fmt);
+		mvsyslog(level, fmt, ap);
+		va_end(ap);
+	}
+}
+
+
 #if defined(OPENSSL) && defined(ENABLE_CMAC)
 static size_t
 cmac_ctx_size(
@@ -44,8 +66,7 @@ cmac_ctx_size(
  * take an idea from ntpsec and cache the context to avoid malloc/free
  * overhead in time-critical paths.  ntpsec also caches the algorithms
  * with each key.
- * This is not thread-safe, but that is
- * not a problem at present.
+ * This is not thread-safe, but that is not a problem at present.
  */
 static EVP_MD_CTX *
 get_md_ctx(
@@ -56,12 +77,12 @@ get_md_ctx(
 	static MD5_CTX	md5_ctx;
 
 	DEBUG_INSIST(NID_md5 == nid);
-	MD5Init(&md5_ctx);
+	ntp_md5_init(&md5_ctx);
 
 	return &md5_ctx;
 #else
 	if (!EVP_DigestInit(digest_ctx, EVP_get_digestbynid(nid))) {
-		msyslog(LOG_ERR, "%s init failed", OBJ_nid2sn(nid));
+		digst_msyslog(LOG_ERR, "%s init failed", OBJ_nid2sn(nid));
 		return NULL;
 	}
 
@@ -105,23 +126,23 @@ make_mac(
 		}
 
 		if (NULL == (ctx = CMAC_CTX_new())) {
-			msyslog(LOG_ERR, "MAC encrypt: CMAC %s CTX new failed.", CMAC);
+			digst_msyslog(LOG_ERR, "MAC encrypt: CMAC %s CTX new failed.", CMAC);
 			goto cmac_fail;
 		}
 		if (!CMAC_Init(ctx, keyptr, AES_128_KEY_SIZE, EVP_aes_128_cbc(), NULL)) {
-			msyslog(LOG_ERR, "MAC encrypt: CMAC %s Init failed.",    CMAC);
+			digst_msyslog(LOG_ERR, "MAC encrypt: CMAC %s Init failed.",    CMAC);
 			goto cmac_fail;
 		}
 		if (cmac_ctx_size(ctx) > digest->len) {
-			msyslog(LOG_ERR, "MAC encrypt: CMAC %s buf too small.",  CMAC);
+			digst_msyslog(LOG_ERR, "MAC encrypt: CMAC %s buf too small.",  CMAC);
 			goto cmac_fail;
 		}
 		if (!CMAC_Update(ctx, msg->buf, msg->len)) {
-			msyslog(LOG_ERR, "MAC encrypt: CMAC %s Update failed.",  CMAC);
+			digst_msyslog(LOG_ERR, "MAC encrypt: CMAC %s Update failed.",  CMAC);
 			goto cmac_fail;
 		}
 		if (!CMAC_Final(ctx, digest->buf, &retlen)) {
-			msyslog(LOG_ERR, "MAC encrypt: CMAC %s Final failed.",   CMAC);
+			digst_msyslog(LOG_ERR, "MAC encrypt: CMAC %s Final failed.",   CMAC);
 			retlen = 0;
 		}
 	  cmac_fail:
@@ -139,22 +160,22 @@ make_mac(
 			goto mac_fail;
 		}
 		if ((size_t)EVP_MD_CTX_size(ctx) > digest->len) {
-			msyslog(LOG_ERR, "MAC encrypt: MAC %s buf too small.",
+			digst_msyslog(LOG_ERR, "MAC encrypt: MAC %s buf too small.",
 				OBJ_nid2sn(ktype));
 			goto mac_fail;
 		}
 		if (!EVP_DigestUpdate(ctx, key->buf, (u_int)key->len)) {
-			msyslog(LOG_ERR, "MAC encrypt: MAC %s Digest Update key failed.",
+			digst_msyslog(LOG_ERR, "MAC encrypt: MAC %s Digest Update key failed.",
 				OBJ_nid2sn(ktype));
 			goto mac_fail;
 		}
 		if (!EVP_DigestUpdate(ctx, msg->buf, (u_int)msg->len)) {
-			msyslog(LOG_ERR, "MAC encrypt: MAC %s Digest Update data failed.",
+			digst_msyslog(LOG_ERR, "MAC encrypt: MAC %s Digest Update data failed.",
 				OBJ_nid2sn(ktype));
 			goto mac_fail;
 		}
 		if (!EVP_DigestFinal(ctx, digest->buf, &uilen)) {
-			msyslog(LOG_ERR, "MAC encrypt: MAC %s Digest Final failed.",
+			digst_msyslog(LOG_ERR, "MAC encrypt: MAC %s Digest Final failed.",
 				OBJ_nid2sn(ktype));
 			uilen = 0;
 		}
@@ -171,10 +192,10 @@ make_mac(
 		if (digest->len < MD5_LENGTH) {
 			msyslog(LOG_ERR, "%s", "MAC encrypt: MAC md5 buf too small.");
 		} else {
-			MD5Init(ctx);
-			MD5Update(ctx, (const void *)key->buf, key->len);
-			MD5Update(ctx, (const void *)msg->buf, msg->len);
-			MD5Final(digest->buf, ctx);
+			ntp_md5_init(ctx);
+			ntp_md5_update(ctx, key->buf, key->len);
+			ntp_md5_update(ctx, msg->buf, msg->len);
+			ntp_md5_final(digest->buf, ctx);
 			retlen = MD5_LENGTH;
 		}
 	} else {
@@ -188,17 +209,61 @@ make_mac(
 
 
 /*
- * MD5authencrypt - generate message digest
- *
- * Returns 0 on failure or length of MAC including key ID.
+ * MD5authencrypt - add message digest to provided packet buffer.
+ * Provided buffer must have room for 24 bytes of key ID and MAC.
+ * Returns 0 on failure or length of added MAC including key ID.
  */
 size_t
 MD5authencrypt(
+	int		type,		/* hash algorithm */
+	const u_char *	key,		/* key pointer */
+	size_t		klen,		/* key length */
+	u_int32 *	pkt,		/* packet pointer */
+	size_t		input_size	/* without MAC */
+	)
+{
+	u_char	digest[EVP_MAX_MD_SIZE];
+	rwbuffT digb = { digest, sizeof(digest) };
+	robuffT keyb = { key, klen };
+	robuffT msgb = { pkt, input_size };
+	size_t	dlen;
+
+	dlen = make_mac(&digb, type, &keyb, &msgb);
+	if (0 == dlen) {
+		return 0;
+	}
+	/*
+	 * If the digest is longer than the 20 octets truncate it.  NTPv4
+	 * MACs consist of a 4-octet key ID and a digest, total up to 24
+	 * octets.  See RFC 7822 7.5.1.3 and 7.5.1.4.
+	 * Use of a digest algorithm which produces more than 20 octets
+	 * provides increased difficulty to forge even when truncated.
+	 * The fleeting lifetime of an individual packet's MAC makes offline
+	 * attack difficult.  The basic NTP packet is 48 octets, so it is
+	 * not obvious that a digest of more than 20 octets is warranted.
+	 */
+	if (dlen > MAX_MDG_LEN) {
+		dlen = MAX_MDG_LEN;
+	}
+	memcpy((u_char *)pkt + input_size + KEY_MAC_LEN, digest, dlen);
+	return (dlen + KEY_MAC_LEN);
+}
+
+
+/*
+ * MD5authdecrypt - verify MD5 message authenticator
+ *
+ * Returns TRUE if digest valid.
+ */
+bool
+MD5authdecrypt(
 	int		type,	/* hash algorithm */
 	const u_char *	key,	/* key pointer */
 	size_t		klen,	/* key length */
-	u_int32 *	pkt,	/* packet pointer */
-	size_t		length	/* packet length */
+	u_int32	*	pkt,	/* packet pointer */
+	size_t		length,	/* packet length */
+	size_t		mac_size, /* including key id */
+	keyid_t		keyno   /* key id (for err log) */
 	)
 {
 	u_char	digest[EVP_MAX_MD_SIZE];
@@ -208,42 +273,15 @@ MD5authencrypt(
 	size_t	dlen;
 
 	dlen = make_mac(&digb, type, &keyb, &msgb);
-	if (0 == dlen) {
-		return 0;
+
+	/* If the digest is longer than 20 octets truncate. */
+	if (dlen > MAX_MDG_LEN) {
+		dlen = MAX_MDG_LEN;
 	}
-	memcpy((u_char *)pkt + length + KEY_MAC_LEN, digest,
-	       min(dlen, MAX_MDG_LEN));
-	return (dlen + KEY_MAC_LEN);
-}
-
-
-/*
- * MD5authdecrypt - verify MD5 message authenticator
- *
- * Returns one if digest valid, zero if invalid.
- */
-int
-MD5authdecrypt(
-	int		type,	/* hash algorithm */
-	const u_char *	key,	/* key pointer */
-	size_t		klen,	/* key length */
-	u_int32	*	pkt,	/* packet pointer */
-	size_t		length,	/* packet length */
-	size_t		size,	/* MAC size */
-	keyid_t		keyno   /* key id (for err log) */
-	)
-{
-	u_char	digest[EVP_MAX_MD_SIZE];
-	rwbuffT digb = { digest, sizeof(digest) };
-	robuffT keyb = { key, klen };
-	robuffT msgb = { pkt, length };
-	size_t	dlen = 0;
-
-	dlen = make_mac(&digb, type, &keyb, &msgb);
-	if (0 == dlen || size != dlen + KEY_MAC_LEN) {
-		msyslog(LOG_ERR,
+	if (mac_size != dlen + KEY_MAC_LEN) {
+		digst_msyslog(LOG_ERR,
 			"MAC decrypt: MAC length error: %u not %u for key %u",
-			(u_int)size, (u_int)(dlen + KEY_MAC_LEN), keyno);
+			(u_int)mac_size, (u_int)(dlen + KEY_MAC_LEN), keyno);
 		return FALSE;
 	}
 	return !isc_tsmemcmp(digest,
@@ -279,9 +317,9 @@ addr2refid(sockaddr_u *addr)
 		return (NSRCADR(addr));
 	}
 	/* MD5 is not used for authentication here. */
-	MD5Init(&md5_ctx);
-	MD5Update(&md5_ctx, (void *)&SOCK_ADDR6(addr), sizeof(SOCK_ADDR6(addr)));
-	MD5Final(u.digest, &md5_ctx);
+	ntp_md5_init(&md5_ctx);
+	ntp_md5_update(&md5_ctx, &SOCK_ADDR6(addr), sizeof(SOCK_ADDR6(addr)));
+	ntp_md5_final(u.digest, &md5_ctx);
 #ifdef WORDS_BIGENDIAN
 	u.addr_refid = BYTESWAP32(u.addr_refid);
 #endif

@@ -229,13 +229,6 @@ char const *progname;
 
 int was_alarmed;
 
-#ifdef DECL_SYSCALL
-/*
- * We put this here, since the argument profile is syscall-specific
- */
-extern int syscall	(int, ...);
-#endif /* DECL_SYSCALL */
-
 
 #if !defined(SIM) && defined(SIGDIE1)
 static volatile int signalled	= 0;
@@ -966,7 +959,7 @@ ntpdmain(
 
 		while (ifacect-- > 0) {
 			add_nic_rule(
-				is_ip_address(*ifaces, AF_UNSPEC, &addr)
+				sau_from_string(*ifaces, AF_UNSPEC, &addr)
 					? MATCH_IFADDR
 					: MATCH_IFNAME,
 				*ifaces, -1, ACTION_LISTEN);

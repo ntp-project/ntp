@@ -39,10 +39,13 @@ extern void test_Digest_MD5(void);
 extern void test_Digest_MDC2(void);
 extern void test_Digest_RIPEMD160(void);
 extern void test_Digest_SHA1(void);
-extern void test_Digest_SHAKE128(void);
+extern void test_Digest_SHA512(void);
 extern void test_Digest_DSA(void);
 extern void test_Digest_DSA_SHA(void);
-extern void test_Digest_SHA(void);
+extern void test_Digest_3DES(void);
+extern void test_Digest_SHA256(void);
+extern void test_Digest_SHA3_256(void);
+extern void test_Some_Digests_Succeeded(void);
 
 
 //=======Suite Setup=====
@@ -71,16 +74,19 @@ int main(int argc, char *argv[])
   progname = argv[0];
   suite_setup();
   UnityBegin("digests.c");
-  RUN_TEST(test_Digest_AES128CMAC, 131);
-  RUN_TEST(test_Digest_MD4, 168);
-  RUN_TEST(test_Digest_MD5, 205);
-  RUN_TEST(test_Digest_MDC2, 238);
-  RUN_TEST(test_Digest_RIPEMD160, 275);
-  RUN_TEST(test_Digest_SHA1, 314);
-  RUN_TEST(test_Digest_SHAKE128, 353);
-  RUN_TEST(test_Digest_DSA, 390);
-  RUN_TEST(test_Digest_DSA_SHA, 429);
-  RUN_TEST(test_Digest_SHA, 468);
+  RUN_TEST(test_Digest_AES128CMAC, 165);
+  RUN_TEST(test_Digest_MD4, 200);
+  RUN_TEST(test_Digest_MD5, 235);
+  RUN_TEST(test_Digest_MDC2, 266);
+  RUN_TEST(test_Digest_RIPEMD160, 301);
+  RUN_TEST(test_Digest_SHA1, 338);
+  RUN_TEST(test_Digest_SHA512, 375);
+  RUN_TEST(test_Digest_DSA, 412);
+  RUN_TEST(test_Digest_DSA_SHA, 449);
+  RUN_TEST(test_Digest_3DES, 486);
+  RUN_TEST(test_Digest_SHA256, 523);
+  RUN_TEST(test_Digest_SHA3_256, 560);
+  RUN_TEST(test_Some_Digests_Succeeded, 590);
 
   return (UnityEnd());
 }

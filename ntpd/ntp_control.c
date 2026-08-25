@@ -144,8 +144,8 @@ static const struct ctl_proc control_codes[] = {
 #define	CS_PEERID		9
 #define	CS_OFFSET		10
 #define	CS_DRIFT		11
-#define	CS_JITTER		12
-#define	CS_ERROR		13
+#define	CS_JITTER		12			/* sys_jitter */
+#define	CS_ERROR		13			/* clk_jitter */
 #define	CS_CLOCK		14
 #define	CS_PROCESSOR		15
 #define	CS_SYSTEM		16
@@ -956,18 +956,18 @@ save_config(
 	 * reject both types of slashes on all platforms.
 	 */
 	/* TALOS-CAN-0062: block directory traversal for VMS, too */
-	static const char * illegal_in_filename =
-#if defined(VMS)
-	    ":[]"	/* do not allow drive and path components here */
-#elif defined(SYS_WINNT)
-	    ":\\/"	/* path and drive separators */
-#else
-	    "\\/"	/* separator and critical char for POSIX */
-#endif
-	    ;
 	char reply[128];
 #ifdef SAVECONFIG
 	static const char savedconfig_eq[] = "savedconfig=";
+	static const char* illegal_in_filename =
+#if defined(VMS)
+		":[]"	/* do not allow drive and path components here */
+#elif defined(SYS_WINNT)
+		":\\/"	/* path and drive separators */
+#else
+		"\\/"	/* separator and critical char for POSIX */
+#endif
+		;
 
 	/* Build a safe open mode from the available mode flags. We want
 	 * to create a new file and write it in text mode (when
@@ -1999,12 +1999,12 @@ ctl_putsys(
 		ctl_putdbl(sys_var[CS_DRIFT].text, drift_comp * 1e6);
 		break;
 
-	case CS_JITTER:
+	case CS_JITTER:					/* sys_jitter */
 		ctl_putdbl6(sys_var[CS_JITTER].text, sys_jitter * 1e3);
 		break;
 
-	case CS_ERROR:
-		ctl_putdbl(sys_var[CS_ERROR].text, clock_jitter * 1e3);
+	case CS_ERROR:					/* clk_jitter */
+		ctl_putdbl6(sys_var[CS_ERROR].text, clock_jitter * 1e3);
 		break;
 
 	case CS_CLOCK:
@@ -3663,18 +3663,18 @@ static u_int32 derive_nonce(
 		last_salt_update = current_time;
 	}
 
-	MD5Init(&ctx);
-	MD5Update(&ctx, salt, sizeof(salt));
-	MD5Update(&ctx, &ts_i, sizeof(ts_i));
-	MD5Update(&ctx, &ts_f, sizeof(ts_f));
+	ntp_md5_init(&ctx);
+	ntp_md5_update(&ctx, salt, sizeof(salt));
+	ntp_md5_update(&ctx, &ts_i, sizeof(ts_i));
+	ntp_md5_update(&ctx, &ts_f, sizeof(ts_f));
 	if (IS_IPV4(addr)) {
-		MD5Update(&ctx, &SOCK_ADDR4(addr), sizeof(SOCK_ADDR4(addr)));
+		ntp_md5_update(&ctx, &SOCK_ADDR4(addr), sizeof(SOCK_ADDR4(addr)));
 	} else {
-		MD5Update(&ctx, &SOCK_ADDR6(addr), sizeof(SOCK_ADDR6(addr)));
+		ntp_md5_update(&ctx, &SOCK_ADDR6(addr), sizeof(SOCK_ADDR6(addr)));
 	}
-	MD5Update(&ctx, &NSRCPORT(addr), sizeof(NSRCPORT(addr)));
-	MD5Update(&ctx, salt, sizeof(salt));
-	MD5Final(d.digest, &ctx);
+	ntp_md5_update(&ctx, &NSRCPORT(addr), sizeof(NSRCPORT(addr)));
+	ntp_md5_update(&ctx, salt, sizeof(salt));
+	ntp_md5_final(d.digest, &ctx);
 
 	return d.extract;
 }

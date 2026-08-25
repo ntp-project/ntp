@@ -399,6 +399,7 @@ typedef int	pid_t;	/* PID is an int */
 # define HAVE_SYS_TIME_H		1
 # define HAVE_TERMIOS_H			1
 
+# define HAVE__STRUPR			1
 # define HAVE_ALLOCA			1
 # define HAVE_GETCLOCK			1
 # define HAVE_MEMMOVE			1

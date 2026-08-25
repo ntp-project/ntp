@@ -71,7 +71,6 @@ noinst_HEADERS =	\
 	recvbuff.h	\
 	refclock_atom.h	\
 	refidsmear.h	\
-	safecast.h	\
 	ssl_applink.c	\
 	timepps-SCO.h	\
 	timepps-Solaris.h	\

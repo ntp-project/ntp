@@ -24,6 +24,11 @@
 #  define CMAC		"AES128CMAC"
 # endif /*HAVE_OPENSSL_CMAC_H*/
 
+/* Break apart OpenSSL version number */
+#define SSLV_MAJOR(vn)	(((vn) & 0xf0000000) >> 28)
+#define SSLV_MINOR(vn)	(((vn) & 0x0ff00000) >> 20)
+#define SSLV_PATCH(vn)	(((vn) & 0x00000ff0) >> 4)
+
 EVP_MD_CTX *digest_ctx;
 
 
@@ -62,16 +67,19 @@ ssl_init(void)
 void
 ssl_check_version(void)
 {
-	u_long	v;
-	char *  buf;
+	const u_long	bv = OPENSSL_VERSION_NUMBER;
+	u_long		rv = OpenSSL_version_num();
+	char *		buf;
 
-	v = OpenSSL_version_num();
-	if ((v ^ OPENSSL_VERSION_NUMBER) & ~0xff0L) {
-		LIB_GETBUF(buf);
-		snprintf(buf, LIB_BUFLENGTH, 
-			 "OpenSSL version mismatch."
-			 "Built against %lx, you have %lx\n",
-			 (u_long)OPENSSL_VERSION_NUMBER, v);
+	if (   SSLV_MAJOR(bv) != SSLV_MAJOR(rv)
+	    || SSLV_MINOR(bv) != SSLV_MINOR(rv)) {
+
+		buf = lib_getbuf();
+		snprintf(buf, LIB_BUFLENGTH,
+			"Using libcrypto %lu.%lu.%lu,"
+			" built for %lu.%lu.%lu.\n",
+			SSLV_MAJOR(rv), SSLV_MINOR(rv), SSLV_PATCH(rv),
+			SSLV_MAJOR(bv), SSLV_MINOR(bv), SSLV_PATCH(bv));
 		msyslog(LOG_WARNING, "%s", buf);
 		fputs(buf, stderr);
 	}
@@ -94,51 +102,46 @@ keytype_from_text(
 {
 	int		key_type;
 	u_int		digest_len;
-#ifdef OPENSSL	/* --*-- OpenSSL code --*-- */
-	const u_long	max_digest_len = MAX_MDG_LEN;
+#ifdef OPENSSL
 	char *		upcased;
-	char *		pch;
 	EVP_MD const *	md;
 
 	/*
-	 * OpenSSL digest short names are capitalized, so uppercase the
-	 * digest name before passing to OBJ_sn2nid().  If it is not
-	 * recognized but matches our CMAC string use NID_cmac, or if
-	 * it begins with 'M' or 'm' use NID_md5 to be consistent with
-	 * past behavior.
+	 * If key type string is not recognized but matches our CMAC string
+	 * use NID_cmac, or if it begins with 'M' or 'm' use NID_md5.  The
+	 * single-letter alias M has long been used by ntp-keygen for MD5
+	 * when generating ntp.keys.
+	 * When built with OpenSSL MD5 may not be available for symmetric
+	 * authentication due to FIPS hardening or OpenSSL deprecation,
+	 * though we'll still have it available for IPv6 refid derivation
+	 * and mode 6 nonces, where other concerns outweigh the reasons
+	 * for its deprecation.
 	 */
 	INIT_SSL();
 
-	/* get name in uppercase */
-	LIB_GETBUF(upcased);
-	strlcpy(upcased, text, LIB_BUFLENGTH);
-
-	for (pch = upcased; '\0' != *pch; pch++) {
-		*pch = (char)toupper((unsigned char)*pch);
+	if ('m' == tolower(text[0]) && '\0' == text[1]) {
+		upcased = strdup("MD5");
+	} else {
+		upcased = _strupr(strdup(text));
 	}
-
 	key_type = OBJ_sn2nid(upcased);
 
-#   ifdef ENABLE_CMAC
-	if (!key_type && !strncmp(CMAC, upcased, strlen(CMAC) + 1)) {
+# ifdef ENABLE_CMAC
+	if (!key_type && !strcmp(CMAC, upcased)) {
 		key_type = NID_cmac;
-
-		if (debug) {
-			fprintf(stderr, "%s:%d:%s():%s:key\n",
-				__FILE__, __LINE__, __func__, CMAC);
-		}
 	}
-#   endif /*ENABLE_CMAC*/
-#else
+# endif
+	free(upcased);
+	upcased = NULL;
 
-	key_type = 0;
-#endif
-
-	if (!key_type && 'm' == tolower((unsigned char)text[0])) {
+#else	/* !OPENSSL follows */
+	if ('m' == tolower(text[0])) {
 		key_type = NID_md5;
+	} else {
+		key_type = 0;
 	}
-
-	if (!key_type) {
+#endif
+	if (0 == key_type) {
 		return 0;
 	}
 
@@ -147,43 +150,23 @@ keytype_from_text(
 		md = EVP_get_digestbynid(key_type);
 		digest_len = (md) ? EVP_MD_size(md) : 0;
 
-		if (!md || digest_len <= 0) {
-#   ifdef ENABLE_CMAC
-		    if (key_type == NID_cmac) {
-			digest_len = CMAC_LENGTH;
-
-			if (debug) {
-				fprintf(stderr, "%s:%d:%s():%s:len\n",
-					__FILE__, __LINE__, __func__, CMAC);
+		if (NULL == md || 0 == digest_len) {
+# ifdef ENABLE_CMAC
+			if (NID_cmac == key_type) {
+				digest_len = CMAC_LENGTH;
+			} else
+# endif
+			{
+				msyslog(LOG_ERR,
+					"key type %s is not supported by OpenSSL\n",
+					keytype_name(key_type));
+				return 0;
 			}
-		    } else
-#   endif /*ENABLE_CMAC*/
-		    {
-			fprintf(stderr,
-				"key type %s is not supported by OpenSSL\n",
-				keytype_name(key_type));
-			msyslog(LOG_ERR,
-				"key type %s is not supported by OpenSSL\n",
-				keytype_name(key_type));
-			return 0;
-		    }
 		}
-
-		if (digest_len > max_digest_len) {
-		    fprintf(stderr,
-			    "key type %s %u octet digests are too big, max %lu\n",
-			    keytype_name(key_type), digest_len,
-			    max_digest_len);
-		    msyslog(LOG_ERR,
-			    "key type %s %u octet digests are too big, max %lu",
-			    keytype_name(key_type), digest_len,
-			    max_digest_len);
-		    return 0;
-		}
-#else
+#else	/* !OPENSSL follows */
 		digest_len = MD5_LENGTH;
 #endif
-		*pdigest_len = digest_len;
+		*pdigest_len = min(digest_len, MAX_MDG_LEN);
 	}
 
 	return key_type;

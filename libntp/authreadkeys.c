@@ -240,7 +240,7 @@ authreadkeys(
 				  keyno);
 			keytype = 0;
 		} else {
-			keytype = KEY_TYPE_MD5;
+			keytype = NID_md5;
 		}
 #endif	/* !OPENSSL */
 
@@ -326,7 +326,7 @@ authreadkeys(
 					snbits = UINT_MAX;
 				}
 
-				if (is_ip_address(tp, AF_UNSPEC, &addr)) {
+				if (sau_from_string(tp, AF_UNSPEC, &addr)) {
 					/* Make sure that snbits is valid for addr */
 				    if ((snbits < UINT_MAX) &&
 					( (IS_IPV4(&addr) && snbits > 32) ||

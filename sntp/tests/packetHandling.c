@@ -14,6 +14,7 @@
 
 void setUp(void);
 int LfpEquality(const l_fp expected, const l_fp actual);
+
 void test_GenerateUnauthenticatedPacket(void);
 void test_GenerateAuthenticatedPacket(void);
 void test_OffsetCalculationPositiveOffset(void);
@@ -24,6 +25,8 @@ void test_HandleServerAuthenticationFailure(void);
 void test_HandleKodDemobilize(void);
 void test_HandleKodRate(void);
 void test_HandleCorrectPacket(void);
+
+void dump_mac(const char *test_func, u_char *pmac, size_t octets);
 
 
 void
@@ -74,7 +77,7 @@ test_GenerateAuthenticatedPacket(void)
 {
 #ifdef OPENSSL
 
-	const int EXPECTED_PKTLEN = LEN_PKT_NOMAC + MAX_SHAKE128_LEN;
+	const int EXPECTED_PKTLEN = LEN_PKT_NOMAC + KEY_MAC_LEN + MAX_MDG_LEN;
 
 	struct key	testkey;
 	struct pkt	testpkt;
@@ -82,18 +85,19 @@ test_GenerateAuthenticatedPacket(void)
 	l_fp		expected_xmt, actual_xmt;
 	const char key[] = "123456789";
 	size_t		mac_sz;
-	const u_char 	expected_mac[] = {
-				0x46, 0x79, 0x81, 0x6b,
-				0x22, 0xe3, 0xa7, 0xaf,
-				0x1d, 0x63, 0x20, 0xfb,
-				0xc7, 0xd6, 0x87, 0x2c
+	const u_char	expected_mac[] = {
+				0x74, 0x66, 0x61, 0x32,
+				0xfa, 0x44, 0xd7, 0x22,
+				0x97, 0x27, 0xca, 0xac,
+				0x95, 0xd9, 0x13, 0xe2,
+				0x5f, 0xc5, 0x7e, 0x1f
 			};
 
 	testkey.next = NULL;
 	testkey.key_id = 30;
 	strlcpy(testkey.key_seq, key, sizeof(testkey.key_seq));
 	testkey.key_len = strlen(testkey.key_seq);
-	strlcpy(testkey.typen, "SHAKE128", sizeof(testkey.typen));
+	strlcpy(testkey.typen, "SHA256", sizeof(testkey.typen));
 	testkey.typei = keytype_from_text(testkey.typen, NULL);
 
 	xmt.tv_sec = JAN_1970;
@@ -116,13 +120,13 @@ test_GenerateAuthenticatedPacket(void)
 
 	TEST_ASSERT_EQUAL(testkey.key_id, ntohl(testpkt.exten[0]));
 
-	TEST_ASSERT_EQUAL(sizeof(expected_mac), SHAKE128_LENGTH);
+	TEST_ASSERT_EQUAL(sizeof(expected_mac), MAX_MDG_LEN);
  	mac_sz = make_mac(&testpkt, LEN_PKT_NOMAC, &testkey,
 			  &testpkt.exten[1], MAX_MDG_LEN);
-	TEST_ASSERT_EQUAL(mac_sz, SHAKE128_LENGTH);
-
-	TEST_ASSERT_EQUAL_MEMORY(expected_mac, (void *)&testpkt.exten[1],
-				 SHAKE128_LENGTH);
+	TEST_ASSERT_EQUAL(mac_sz, MAX_MDG_LEN);
+	dump_mac(__func__, (void *)&testpkt.exten[1], mac_sz);
+	TEST_ASSERT_EQUAL_HEX8_ARRAY(expected_mac, (void *)&testpkt.exten[1],
+				     mac_sz);
 
 #else	/* !OPENSSL follows */
 
@@ -329,6 +333,50 @@ test_HandleCorrectPacket(void)
 	AF(&host) = AF_INET;
 
 	TEST_ASSERT_EQUAL(0, handle_pkt(rpktl, &rpkt, &host, ""));
+}
+
+
+/*
+ * Dump a MAC in a form easy to cut and paste into the expected declaration.
+ * This is noisy in the test logs but they're generally examined only when
+ * adding another digest algorithm to the unit tests, where they are very
+ * helpful as the assertion failure messages do not provide the generated
+ * MAC to put into the expected declaration.
+ */
+void dump_mac(
+	const char *	test_func,
+	u_char *	pmac,
+	size_t		octets
+)
+{
+	char	dump[2048];
+	size_t	dc = 0;
+	size_t	idx;
+
+	dc += snprintf(dump + dc, sizeof(dump) - dc,
+		"\n%s\n"
+		"\tconst u_char\texpected_mac[] = {",
+		test_func);
+
+	for (idx = 0; idx < octets; idx++) {
+		if (0 == idx % 4) {
+			dc += snprintf(dump + dc, sizeof(dump) - dc, "\n\t\t\t\t");
+		}
+		if (dc < sizeof(dump)) {
+			dc += snprintf(dump + dc, sizeof(dump) - dc,
+				"0x%02x, ", pmac[idx]);
+		}
+	}
+
+	/* wipe out final comma and space */
+	if (dc > 2) {
+		dc -= 2;
+	}
+	if (dc < sizeof(dump)) {
+		dc += snprintf(dump + dc, sizeof(dump) - dc, "\n\t\t\t};");
+	}
+
+	msyslog(LOG_DEBUG, "%s", dump);
 }
 
 /* packetHandling.c */

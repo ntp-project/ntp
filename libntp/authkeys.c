@@ -389,7 +389,7 @@ auth_log2(size_t x)
 	** bithack to calculate floor(log2(x))
 	**
 	** This assumes
-	**   - (sizeof(size_t) is a power of two
+	**   - sizeof(size_t) is a power of two
 	**   - CHAR_BITS is a power of two
 	**   - returning zero for arguments <= 0 is OK.
 	**
@@ -408,6 +408,7 @@ auth_log2(size_t x)
 		else
 			x <<= s;
 	}
+
 	return (u_short)r;
 }
 
@@ -627,7 +628,8 @@ authhavekey(
 
 
 /*
- * authtrust - declare a key to be trusted/untrusted
+ * authtrust - declare a key to be trusted/untrusted (trust is TRUE/FALSE),
+ *	       OR trusted with an automatic expiration after trust seconds.
  */
 void
 authtrust(
@@ -640,17 +642,15 @@ authtrust(
 
 	/*
 	 * Search bin for key; if it does not exist and is untrusted,
-	 * forget it.
+	 * we're done here.
 	 */
-
 	sk = auth_findkey(id);
-	if (!trust && sk == NULL)
+	if (!trust && NULL == sk) {
 		return;
-
+	}
 	/*
 	 * There are two conditions remaining. Either it does not
-	 * exist and is to be trusted or it does exist and is or is
-	 * not to be trusted.
+	 * exist and is to be trusted, or it exists.
 	 */
 	if (sk != NULL) {
 		/*
@@ -662,10 +662,11 @@ authtrust(
 		authcache_flush_id(id);
 		if (trust > 0) {
 			sk->flags |= KEY_TRUSTED;
-			if (trust > 1)
+			if (trust > 1) {
 				sk->lifetime = current_time + trust;
-			else
-				sk->lifetime = 0;
+			} else {
+				sk->lifetime = 0; /* infinite */
+			}
 		} else {
 			freesymkey(sk);
 		}
@@ -673,8 +674,9 @@ authtrust(
 	}
 
 	/*
-	 * keyid is not present, but the is to be trusted.  We allocate
-	 * a new key, but do not specify a key type or secret.
+	 * keyid is not present, but it is to be trusted.  We allocate
+	 * a new key, but do not specify a key type or secret.  This is
+	 * how we save the trusted state before we have loaded ntp.keys.
 	 */
 	if (trust > 1) {
 		lifetime = current_time + trust;
@@ -874,6 +876,7 @@ auth_agekeys(void)
  * authencrypt - generate message authenticator
  *
  * Returns length of authenticator field, zero if key not found.
+ * Special case for Crypto NAK: keyid 0 returns KEY_MAC_LEN (4).
  */
 size_t
 authencrypt(
@@ -889,7 +892,7 @@ authencrypt(
 	 */
 	authencryptions++;
 	pkt[length / KEY_MAC_LEN] = htonl(keyno);
-	if (0 == keyno) {
+	if (0 == keyno) {		/* Crypto NAK */
 		return KEY_MAC_LEN;
 	}
 	if (!authhavekey(keyno)) {

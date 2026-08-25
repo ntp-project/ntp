@@ -11,6 +11,21 @@
 # Each digest is tested twice with keyids separated by 50 for
 # plaintext and hex-encoded keys.
 #
+# OpenSSL 3.4 broke backwards compatibility for SHAKE128 and SHAKE256.
+# These are unusual digests with a configurable output size, and earlier
+# OpenSSL defaults led some to believe the 128 and 256 in their names
+# were the fixed digest size, while in fact they indicate some other
+# parameter and if used with those output sizes, which were used by
+# default in earlier OpenSSL, they are relatively weak compared to
+# other digests with those resulting digest sizes.
+#
+# If we use SHAKE128 or SHAKE256 here, the EVP_DigestFinal() calls
+# will always fail as we have not specified an output size.  Given they
+# are relatively weak with smaller output sizes and we're truncating
+# all digests to 160 bits, we are just avoiding them.  They are not
+# included in ntpq -c "help keytype" output because they fail with our
+# code.
+#
 
  1 AES128CMAC	X~A=%NWlo]p$dGq,S3M9
  2 MD4		oV'8?f+J5`_EOvW!B,R`
@@ -18,10 +33,12 @@
  4 MDC2		b@XOS~6VZ.E9Qv!CJYV,
  5 RIPEMD160	I89p}f6QopwC\LwHBm;e
  6 SHA1		A;H=E;.m4N%t%EeJ90[d
- 7 SHAKE128	|HxLoa,mzG<"y>^TI_(1
+ 7 SHA512	|HxLoa,mzG<"y>^TI_(1
  8 DSA		306+^SHLV5{"v7W`U3aY
  9 DSA-SHA	lGyKZgsI_Pi"y"8JAT98
-10 SHA		2:VO]Q5u%/b&}.<P?T~9
+10 3DES		2:VO]Q5u%/b&}.<P?T~9
+11 SHA256	pth`LC__7"9_+R}hrn9d
+12 SHA3-256	ud6WNx]+33}cZNpxY]8g
 
 51 AES128CMAC 	d0cd9f3ee181769ca7cccaada09f093c5fe8e628
 52 MD4		7080bc47eea6b379b2ff841805a144fb4a241a16
@@ -29,7 +46,9 @@
 54 MDC2		3cb1d4633a460179a7c96aed6c6a9273c3c98af8
 55 RIPEMD160	6028ec169bfbe55ab61ffa7baa34b482020f0619
 56 SHA1		17d96a86eb9b9075f33e1c0a08bb2bb61e916e33
-57 SHAKE128	70da1a91030eb91836c1cf76cf67ddfd6b96fa91
+57 SHA512	af918f855e5a408729a68230cdbc7c74dc9762e46e1fdf884dee2cdfd9072a4d28d9fc5dd8eb
 58 DSA		7ce5deea7569d7423d5e1b497c8eb3bfeff852d5
 59 DSA-SHA	9fd568e8f371deae54a65bc50b52bbe1f6529589
-60 SHA		ce85046978a4df8366e102c4f1267399bbc25737
+60 3DES		ce85046978a4df8366e102c4f1267399bbc25737493bdedd7ade8153
+61 SHA256	ba767141a68f8d6229c7bdfd2a9cd95a06854195
+62 SHA3-256	c2e8b45d80295e9ec4269c83d3beec250c38a8c9f0286dc353fe4856ce9f087a8791937f519f83e4

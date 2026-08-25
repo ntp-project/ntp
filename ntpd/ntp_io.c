@@ -41,7 +41,6 @@
 #include "timevalops.h"
 #include "timespecops.h"
 #include "ntpd-opts.h"
-#include "safecast.h"
 
 /* Don't include ISC's version of IPv6 variables and structures */
 #define ISC_IPV6_H 1
@@ -1116,7 +1115,7 @@ add_nic_rule(
 	} else if (MATCH_IFADDR == match_type) {
 		REQUIRE(NULL != if_name);
 		/* set rule->addr */
-		is_ip = is_ip_address(if_name, AF_UNSPEC, &rule->addr);
+		is_ip = sau_from_string(if_name, AF_UNSPEC, &rule->addr);
 		REQUIRE(is_ip);
 	} else
 		REQUIRE(NULL == if_name);
@@ -1486,9 +1485,7 @@ is_linklocal(
 
 	if (IS_IPV6(psau)) {
 		p6addr = &psau->sa6.sin6_addr;
-		if (   IN6_IS_ADDR_LINKLOCAL(p6addr)
-		    || IN6_IS_ADDR_SITELOCAL(p6addr)) {
-
+		if (IN6_IS_ADDR_LINKLOCAL(p6addr)) {
 			return TRUE;
 		}
 	} else if (IS_IPV4(psau)) {
@@ -1637,6 +1634,29 @@ is_valid(
 	}
 }
 
+
+/* rename an endpt for an address used on multiple local interfaces */
+static void
+rename_multi_iface_endpt(
+	endpt *		target,
+	endpt * const	other
+	)
+{
+	char new_name[sizeof(target->name)];
+	int  rc;
+
+	rc = snprintf(new_name, sizeof(new_name), "%s,%s",
+		      target->name, other->name);
+	if (rc < sizeof(new_name)) {
+		strlcpy(target->name, new_name, sizeof(target->name));
+	} else {
+		msyslog(LOG_INFO, "%s on %s & %s -> *multiple*",
+		        stoa(&target->sin), target->name, other->name);
+		strlcpy(target->name, "*multiple*", sizeof(target->name));
+	}
+}
+
+
 /*
  * update_interface strategy
  *
@@ -1736,6 +1756,17 @@ update_interfaces(
 
 		DPRINT_INTERFACE(4, (&enumep, "examining ", "\n"));
 
+#ifdef SYS_WINNT
+		/*
+		 * https://bugs.ntp.org/3932 Ignore teredo IFs in Windows ntpd
+		 */
+		static const char szTeredo[] = "Teredo Tunneling Pseudo-Interfa";
+		if (!memcmp(szTeredo, enumep.name,
+			    min(sizeof szTeredo, sizeof enumep.name))) {
+			continue;
+		}
+#endif
+
 		/*
 		 * Check if and how we are going to use the interface.
 		 */
@@ -1798,14 +1829,21 @@ update_interfaces(
 			}
 		}
 		/*
-		 * map to local *address* in order to map all duplicate
-		 * interfaces to an endpt structure with the appropriate
-		 * socket.  Our name space is (ip-address), NOT
-		 * (interface name, ip-address).
+		 * Map to local *address* in order to use a single endpt
+		 * even if a local address appears on two or more network
+		 * interfaces.
 		 */
 		ep = getinterface(&enumep.sin, INT_WILDCARD);
 
-		if (NULL == ep) {
+		if (NULL != ep) {
+			if (!refresh_interface(ep)) {
+				/*
+				 * This endpt will be deleted in phase 2
+				 * because it will not be marked current.
+				 */
+				continue;
+			}
+		} else {
 			ep = emalloc(sizeof(*ep));
 			memcpy(ep, &enumep, sizeof(*ep));
 			if (NULL != newaddrs_tail) {
@@ -1817,39 +1855,23 @@ update_interfaces(
 			continue;
 		}
 
-		if (!refresh_interface(ep)) {
+		if (ep->phase == sys_interphase) {
 			/*
-			 * Refreshing failed, we will delete the endpt
-			 * in phase 2 because it was not marked current.
-			 * We can bind to the address as the refresh
-			 * code already closed the endpt's socket.
-			*/
-			continue;
-		}
-		/*
-		 * found existing and up to date interface -
-		 * mark present.
-		 */
-		if (ep->phase != sys_interphase) {
+			 * The local address is already bound because it is
+			 * configured on more than one network interface.
+			 * Change the endpt name to reflect that.
+			 */
+			rename_multi_iface_endpt(ep, &enumep);
+		} else {
 			/*
-			 * On a new round we reset the name so
-			 * the interface name shows up again if
-			 * this address is no longer shared.
-			 * We reset ignore_packets from the
-			 * new prototype to respect any runtime
-			 * changes to the nic rules.
+			 * On a new round we reset the name so the
+			 * interface name shows up again if this address
+			 * is no longer shared.  We reset ignore_packets
+			 * from the new prototype to respect any runtime
+			 * changes to the nic AKA listen rules.
 			 */
 			strlcpy(ep->name, enumep.name, sizeof(ep->name));
 			ep->ignore_packets = enumep.ignore_packets;
-		} else {
-			/*
-			 * DLH: else branch might be dead code from
-			 * when both address and name were compared.
-			 */
-			msyslog(LOG_INFO, "%s on %u %s -> *multiple*",
-				stoa(&ep->sin), ep->ifnum, ep->name);
-			/* name collision - rename interface */
-			strlcpy(ep->name, "*multiple*", sizeof(ep->name));
 		}
 
 		DPRINT_INTERFACE(4, (ep, "updating ", " present\n"));
@@ -1878,6 +1900,10 @@ update_interfaces(
 			ep->ignore_packets = TRUE;
 		}
 
+		/*
+		 * found existing and up to date interface -
+		 * mark present.
+		 */
 		ep->phase = sys_interphase;
 
 		ifi.action = IFS_EXISTS;
@@ -1910,23 +1936,36 @@ update_interfaces(
 		ep2->elink = NULL;
 		ep = create_interface(port, ep2);
 		if (ep != NULL) {
-			ifi.action = IFS_CREATED;
-			ifi.ep = ep;
 			if (receiver != NULL) {
+				ifi.action = IFS_CREATED;
+				ifi.ep = ep;
 				(*receiver)(data, &ifi);
 			}
 			new_interface_found = TRUE;
 			DPRINT_INTERFACE(3,
 				(ep, "updating ", " new - created\n"));
+		} else {
+			/*
+			 * The only reason create_interface() returns NULL is
+			 * failure to bind the local address.  If there are
+			 * two network interfaces which both use the same
+			 * address, we can be here because we've just bound
+			 * that address earlier in this newaddrs loop.  In
+			 * that case the failure to bind is expected and not
+			 * an error, as evidenced by the local address
+			 * already appearing in our list of bound endpoints.
+			 */
+			ep = getinterface(&ep2->sin, INT_WILDCARD);
+			if (NULL != ep) {
+				rename_multi_iface_endpt(ep2, ep);
+			} else {
+				DPRINT_INTERFACE(3,
+					(ep2, "updating ", " new - FAILED"));
+				msyslog(LOG_ERR, "unable to listen on %s %s",
+					ep2->name, sptoa(&ep2->sin));
+			}
 		}
-		else {
-			DPRINT_INTERFACE(3,
-				(ep, "updating ", " new - FAILED"));
-
-			msyslog(LOG_ERR,
-				"cannot bind address %s",
-				stoa(&ep->sin));
-		}
+		/* we are done with the prototype ep2 either way */
 		free(ep2);
 	}
 
@@ -1952,9 +1991,9 @@ update_interfaces(
 				     "GONE - deleting\n"));
 		remove_interface(ep);
 
-		ifi.action = IFS_DELETED;
-		ifi.ep = ep;
 		if (receiver != NULL) {
+			ifi.action = IFS_DELETED;
+			ifi.ep = ep;
 			(*receiver)(data, &ifi);
 		}
 		/* disconnect peers from deleted endpt. */
@@ -2085,10 +2124,10 @@ create_interface(
 
 	if (INVALID_SOCKET == iface->fd
 	    && INVALID_SOCKET == iface->bfd) {
-		msyslog(LOG_ERR, "unable to create socket on %s (%d) for %s",
+		DPRINTF(2, ("unable to create socket on %s (%d) for %s",
 			iface->name,
 			iface->ifnum,
-			sptoa(&iface->sin));
+			sptoa(&iface->sin)));
 		delete_interface(iface);
 		return NULL;
 	}
@@ -2941,6 +2980,9 @@ open_socket(
 	 */
 	int	on = 1;
 	int	off = 0;
+#ifdef OS_NEEDS_REUSEADDR_FOR_IFADDRBIND
+	int	saved_errno;
+#endif
 
 	if (IS_IPV6(addr) && !ipv6_works)
 		return INVALID_SOCKET;
@@ -2958,7 +3000,6 @@ open_socket(
 		    errval == EPFNOSUPPORT)
 			return (INVALID_SOCKET);
 
-		errno = errval;
 		msyslog(LOG_ERR,
 			"unexpected socket() error %m code %d (not EPROTONOSUPPORT nor EAFNOSUPPORT nor EPFNOSUPPORT) - exiting",
 			errno);
@@ -3056,8 +3097,9 @@ open_socket(
 	 * addresses if a wildcard address already bound
 	 * to the port and SO_REUSEADDR is not set
 	 */
-	if (!is_wildcard_addr(addr))
+	if (!is_wildcard_addr(addr)) {
 		set_wildcard_reuse(AF(addr), 1);
+	}
 #endif
 
 	/*
@@ -3066,27 +3108,26 @@ open_socket(
 	errval = bind(fd, &addr->sa, SOCKLEN(addr));
 
 #ifdef OS_NEEDS_REUSEADDR_FOR_IFADDRBIND
-	if (!is_wildcard_addr(addr))
+	if (!is_wildcard_addr(addr)) {
+		saved_errno = errno;	/* save for DPRINTF just below */
 		set_wildcard_reuse(AF(addr), 0);
+		errno = saved_errno;
+	}
 #endif
 
 	if (errval < 0) {
 		/*
-		 * Don't log this under all conditions
+		 * Don't syslog this, as bind() failing is not always
+		 * unexpected.  It can happen for wildcard addresses and
+		 * broadcast addresses (where turn_off_reuse is 0) and
+		 * when attempting to bind an address we've already
+		 * bound due to more than one interface using the same
+		 * local address.  Leave it to callers to report errors.
 		 */
-		if (turn_off_reuse == 0
-#ifdef DEBUG
-		    || debug > 1
-#endif
-		    ) {
-			msyslog(LOG_ERR,
-				"bind(%d) AF_INET%s %s%s flags 0x%x failed: %m",
-				fd, IS_IPV6(addr) ? "6" : "",
-				sptoa(addr),
-				IS_MCAST(addr) ? " (multicast)" : "",
-				interf->flags);
-		}
-
+		DPRINTF(1,("bind(%d) %s%s flags 0x%x failed: %m",
+			   fd, sptoa(addr),
+			   IS_MCAST(addr) ? " (multicast)" : "",
+			   interf->flags));
 		closesocket(fd);
 
 		return INVALID_SOCKET;
@@ -3205,7 +3246,7 @@ sendpkt(
 	}
 
 	do {
-		if (INT_LL_OF_GLOB & src->flags) {
+		if (ismcast && INT_LL_OF_GLOB & src->flags) {
 			/* avoid duplicate multicasts on same IPv6 net */
 			goto loop;
 		}
@@ -3711,14 +3752,7 @@ io_handler(void)
 		input_handler_scan(&ts, &rdfdes);
 	} else if (nfound == -1 && errno != EINTR) {
 		msyslog(LOG_ERR, "select() error: %m");
-	}
-#   ifdef DEBUG
-	else if (debug > 4) {
-		msyslog(LOG_DEBUG, "select(): nfound=%d, error: %m", nfound);
-	} else {
-		DPRINTF(3, ("select() returned %d: %m\n", nfound));
-	}
-#   endif /* DEBUG */
+	} 
 #  else /* HAVE_SIGNALED_IO */
 	wait_for_signal();
 #  endif /* HAVE_SIGNALED_IO */
