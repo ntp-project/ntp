@@ -50,7 +50,7 @@
 * flock-build: Try to use the full hostname for the buildkey.  <stenn@ntp.org>
 * Author attribution updates
 * Paranoid buffer safety improvement to normal_dtoa(). <hart@ntp.org>
-* Display SSL shared library version number in human form. <hart@ntp.org> 
+* Display SSL shared library version number in human form. <hart@ntp.org>
 * Reorder restrict_u layout to improve alignment on all platforms.
   <hart@ntp.org>
 * Improve ntpq's "help keytype" list of available digests twice.
