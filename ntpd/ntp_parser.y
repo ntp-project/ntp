@@ -1378,6 +1378,7 @@ misc_cmd_int_keyword
 #ifndef LEAP_SMEAR
 			yyerror("Built without LEAP_SMEAR support.");
 #endif
+
 		}
 	;
 
@@ -1837,7 +1838,7 @@ yyerror(
 	const char *msg
 	)
 {
-	int retval;
+	char *err_next;
 	struct FILE_INFO * ip_ctx;
 
 	ip_ctx = lex_current();
@@ -1846,18 +1847,15 @@ yyerror(
 	msyslog(LOG_ERR, "line %d column %d %s",
 		ip_ctx->errpos.nline, ip_ctx->errpos.ncol, msg);
 	if (!lex_from_file()) {
-		/* Save the error message in the correct buffer */
-		retval = snprintf(remote_config.err_msg + remote_config.err_pos,
-				  sizeof remote_config.err_msg - remote_config.err_pos,
-				  "column %d %s",
-				  ip_ctx->errpos.ncol, msg);
-
-		/* Increment the value of err_pos */
-		if (retval > 0)
-			remote_config.err_pos += retval;
-
 		/* Increment the number of errors */
 		++remote_config.no_errors;
+
+		/* Append only complete messages that fit in the buffer. */
+		err_next = remote_config.err_msg + remote_config.err_pos;
+		xsbprintf(&err_next,
+			   remote_config.err_msg + sizeof remote_config.err_msg,
+			   "column %d %s", ip_ctx->errpos.ncol, msg);
+		remote_config.err_pos = (int)(err_next - remote_config.err_msg);
 	}
 }
 
@@ -1886,4 +1884,3 @@ int main(int argc, char *argv[])
 	return 0;
 }
 #endif
-
