@@ -78,6 +78,7 @@ get_mbg_sw_rev(
 {
   sw_revp->code = get_lsb_uint16(bufpp);
   memcpy(sw_revp->name, *bufpp, sizeof(sw_revp->name));
+  sw_revp->name[sizeof(sw_revp->name) - 1] = '\0';
   *bufpp += sizeof(sw_revp->name);
 }
 
@@ -90,6 +91,7 @@ get_mbg_ascii_msg(
   ascii_msgp->csum  = (CSUM) get_lsb_short(bufpp);
   ascii_msgp->valid = get_lsb_int16(bufpp);
   memcpy(ascii_msgp->s, *bufpp, sizeof(ascii_msgp->s));
+  ascii_msgp->s[sizeof(ascii_msgp->s) - 1] = '\0';
   *bufpp += sizeof(ascii_msgp->s);
 }
 
