@@ -646,7 +646,7 @@ gps_input(
 
   parseio->parse_dtime.parse_msg[parseio->parse_dtime.parse_msglen++] = ch;
 
-  if (parseio->parse_dtime.parse_msglen > sizeof(parseio->parse_dtime.parse_msg))
+  if (parseio->parse_dtime.parse_msglen >= sizeof(parseio->parse_dtime.parse_msg))
     {
       msg_buf->phase = MBG_NONE; /* buffer overflow - discard */
       parseio->parse_data[parseio->parse_index] = '\0';
