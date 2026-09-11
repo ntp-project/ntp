@@ -743,7 +743,7 @@ openhost(
 	}
 #endif
 	if (a_info != 0) {
-		fprintf(stderr, "%s\n", gai_strerror(a_info));
+		fprintf(stderr, "%s (%s)\n", gai_strerror(a_info), hname);
 		return 0;
 	}
 
