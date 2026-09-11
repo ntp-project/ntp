@@ -182,7 +182,7 @@ getShmTime(
 		sa.bInheritHandle = FALSE;
 		psec = &sa;
 	}
-	shmid = CreateFileMapping ((HANDLE)0xffffffff, psec, PAGE_READWRITE,
+	shmid = CreateFileMapping (INVALID_HANDLE_VALUE, psec, PAGE_READWRITE,
 				   0, sizeof (struct shmTime), buf);
 	if (shmid == NULL) { /*error*/
 		char buf[1000];		
