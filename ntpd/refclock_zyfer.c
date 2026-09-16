@@ -211,6 +211,7 @@ zyfer_receive(
 	int tfom;		/* Time Figure Of Merit */
 	int omode;		/* Operation mode */
 	u_char *p;
+	size_t	rlen;		/* length of an appended fragment */
 
 	TCivilDate	tsdoy;
 	TNtpDatum	tsntp;
@@ -245,8 +246,13 @@ zyfer_receive(
 		else
 			return;
 	} else {
-		memcpy(pp->a_lastcode + pp->lencode, p, rbufp->recv_length);
-		pp->lencode += rbufp->recv_length;
+		rlen = rbufp->recv_length;
+
+		if (rlen > sizeof(pp->a_lastcode) - 1 - pp->lencode)
+			rlen = sizeof(pp->a_lastcode) - 1 - pp->lencode;
+
+		memcpy(pp->a_lastcode + pp->lencode, p, rlen);
+		pp->lencode += (int)rlen;
 		pp->a_lastcode[pp->lencode] = '\0';
 	}
 

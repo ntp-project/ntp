@@ -1,5 +1,7 @@
 ---
 
+* [Bug 4038] refclock_zyfer.c: bound the append to a_lastcode to prevent a
+             heap overflow. <dkjsone@gmail.com>
 * [Bug 3971] ntpd step back rate-limits and KoDs all sources for step
              duration. Found by kinsey.moore@oarcorp.com <hart@ntp.org>
 * [Bug 3967] ntpd 4.2.8p18 "Address already in use" error with shared IP on
