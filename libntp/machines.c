@@ -477,7 +477,17 @@ ntp_set_tod(
 #endif /* HAVE_SETTIMEOFDAY */
 #ifdef HAVE_STIME
 	if (rc && (SET_TOD_STIME == tod || !tod)) {
+		/*
+		 * stime() takes a time_t pointer except on systems
+		 * that declare it with a long (DECL_STIME_1).  time_t
+		 * may be wider than long, e.g. on 32-bit targets with
+		 * 64-bit time_t, so match the prototype in use.
+		 */
+#ifdef DECL_STIME_1
 		long tp = tvp->tv_sec;
+#else
+		time_t tp = tvp->tv_sec;
+#endif
 
 		errno = 0;
 		rc = stime(&tp); /* lie as bad as SysVR4 */
